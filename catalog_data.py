@@ -1,0 +1,680 @@
+# -*- coding: utf-8 -*-
+"""
+Script to generate index.html for Rentfy clickable prototype
+"""
+
+import os
+import json
+
+def build():
+    # Let's define the catalog in python
+    catalog = [
+        # Kamera dan video
+        {
+            "id": 1,
+            "name": "Kamera mirrorless dan lensa kit",
+            "category": "Kamera dan video",
+            "subcategory": "Kamera mirrorless",
+            "pricePerDay": 150000,
+            "deposit": 300000,
+            "distance": 1.2,
+            "rating": 4.8,
+            "reviewsCount": 42,
+            "lat": -6.2442,
+            "lng": 106.7992,
+            "area": "Kebayoran Baru, Jakarta Selatan",
+            "desc": "Sony Alpha A6400 lengkap dengan lensa kit 16-50mm f/3.5-5.6 OSS. Sangat cocok untuk produksi video YouTube, street photography, liputan event, dan vlog harian. Sensor APS-C 24.2 MP tajam dengan autofokus super cepat Real-time Eye AF.",
+            "packageContents": [
+                "Bodi kamera Sony A6400",
+                "Lensa Sony E 16-50mm f/3.5-5.6 OSS",
+                "2x Baterai original NP-FW50",
+                "Dual charger dock USB",
+                "SD Card SanDisk Extreme Pro 64GB 170MB/s",
+                "Strap leher kamera original",
+                "Tas kamera selempang empuk anti cipratan air"
+            ],
+            "gradient": "linear-gradient(135deg, #1e293b, #0f172a)",
+            "icon": "camera"
+        },
+        {
+            "id": 2,
+            "name": "Kamera saku compact",
+            "category": "Kamera dan video",
+            "subcategory": "Kamera saku",
+            "pricePerDay": 75000,
+            "deposit": 150000,
+            "distance": 0.8,
+            "rating": 4.7,
+            "reviewsCount": 28,
+            "lat": -6.2335,
+            "lng": 106.8091,
+            "area": "Senopati, Jakarta Selatan",
+            "desc": "Canon PowerShot G7X Mark II. Kamera saku premium dengan sensor 1.0 inci dan bukaan lensa f/1.8-2.8. Dilengkapi layar sentuh tilt 180 derajat untuk selfie dan vlogging dengan tone warna kulit khas Canon yang natural.",
+            "packageContents": [
+                "Kamera Canon G7X Mark II",
+                "Baterai original NB-13L",
+                "Charger desktop Canon",
+                "SD Card SanDisk Ultra 32GB",
+                "Pouch pelindung kulit sintetis"
+            ],
+            "gradient": "linear-gradient(135deg, #334155, #1e293b)",
+            "icon": "camera"
+        },
+        {
+            "id": 3,
+            "name": "Kamera aksi 4K",
+            "category": "Kamera dan video",
+            "subcategory": "Kamera aksi",
+            "pricePerDay": 60000,
+            "deposit": 100000,
+            "distance": 2.0,
+            "rating": 4.9,
+            "reviewsCount": 56,
+            "lat": -6.2731,
+            "lng": 106.8152,
+            "area": "Kemang, Jakarta Selatan",
+            "desc": "GoPro HERO 10 Black. Video tajam resolusi 5.3K 60fps & 4K 120fps dengan stabilisasi canggih HyperSmooth 4.0. Bodi tangguh tahan air hingga 10 meter tanpa waterproof housing tambahan.",
+            "packageContents": [
+                "GoPro Hero 10 Black",
+                "2x Baterai Enduro tahan cuaca dingin",
+                "Waterproof housing case hingga 60m",
+                "Tongkat selfie floating hand grip",
+                "MicroSD SanDisk Extreme 64GB A2",
+                "Kabel pengisian USB-C",
+                "Hard case organizer portable"
+            ],
+            "gradient": "linear-gradient(135deg, #0284c7, #0369a1)",
+            "icon": "camera"
+        },
+        {
+            "id": 4,
+            "name": "Kamera polaroid instan",
+            "category": "Kamera dan video",
+            "subcategory": "Kamera polaroid",
+            "pricePerDay": 50000,
+            "deposit": 100000,
+            "distance": 1.5,
+            "rating": 4.6,
+            "reviewsCount": 21,
+            "lat": -6.2480,
+            "lng": 106.8050,
+            "area": "Blok M, Jakarta Selatan",
+            "desc": "Fujifilm Instax Mini 11 warna pastel. Hasilkan foto cetak instan bergaya vintage dalam hitungan detik. Pengaturan eksposur otomatis menghasilkan foto terang di dalam ruangan.",
+            "packageContents": [
+                "Kamera Instax Mini 11",
+                "2x Baterai AA Alkaline terpasang",
+                "Hand strap pergelangan tangan",
+                "Pouch pelindung kanvas (kertas film dibeli terpisah)"
+            ],
+            "gradient": "linear-gradient(135deg, #db2777, #be185d)",
+            "icon": "camera"
+        },
+        {
+            "id": 5,
+            "name": "Lensa 24-70mm f/2.8",
+            "category": "Kamera dan video",
+            "subcategory": "Aksesori",
+            "pricePerDay": 120000,
+            "deposit": 250000,
+            "distance": 1.2,
+            "rating": 4.8,
+            "reviewsCount": 34,
+            "lat": -6.2420,
+            "lng": 106.8010,
+            "area": "Kebayoran Baru, Jakarta Selatan",
+            "desc": "Sigma 24-70mm f/2.8 DG DN Art untuk Sony E-mount. Lensa zoom standar aperture konstan legendaris untuk fotografer profesional. Gambar sangat tajam dari sudut ke sudut dengan bokeh melingkar lembut.",
+            "packageContents": [
+                "Lensa Sigma 24-70mm f/2.8 Art",
+                "Lens hood original Sigma",
+                "Tutup lensa depan dan belakang",
+                "Filter UV pelindung B+W",
+                "Pouch lensa berlapis busa tebal"
+            ],
+            "gradient": "linear-gradient(135deg, #475569, #1e293b)",
+            "icon": "camera"
+        },
+        {
+            "id": 6,
+            "name": "Paket 4 lampu LED panel RGB",
+            "category": "Kamera dan video",
+            "subcategory": "Aksesori",
+            "pricePerDay": 280000,
+            "deposit": 500000,
+            "distance": 3.1,
+            "rating": 5.0,
+            "reviewsCount": 18,
+            "lat": -6.2905,
+            "lng": 106.7981,
+            "area": "Cilandak, Jakarta Selatan",
+            "desc": "Set studio lighting profesional 4x Panel LED RGB video light 50W lengkap dengan stand lampu 2 meter dan softbox diffuser. Kontrol via remote nirkabel atau aplikasi smartphone. Akurasi warna CRI 97+.",
+            "packageContents": [
+                "4x Panel Lampu LED RGB 50W",
+                "4x Light Stand aluminium 200cm",
+                "4x Softbox diffuser lipat + grid",
+                "4x Adaptor power AC",
+                "8x Baterai cadangan NP-F970",
+                "Tas studio besar beroda"
+            ],
+            "gradient": "linear-gradient(135deg, #7c3aed, #4c1d95)",
+            "icon": "camera"
+        },
+        {
+            "id": 7,
+            "name": "Gimbal smartphone",
+            "category": "Kamera dan video",
+            "subcategory": "Gimbal",
+            "pricePerDay": 50000,
+            "deposit": 100000,
+            "distance": 2.4,
+            "rating": 4.7,
+            "reviewsCount": 44,
+            "lat": -6.2300,
+            "lng": 106.8500,
+            "area": "Tebet, Jakarta Selatan",
+            "desc": "DJI Osmo Mobile 6 (OM6). Stabilizer 3-axis dengan batang perpanjangan bawaan untuk selfie sudut lebar dan teknologi pelacakan ActiveTrack 5.0. Rekaman video smartphone mulus layaknya film bioskop.",
+            "packageContents": [
+                "Gimbal DJI OM6",
+                "Magnetic Phone Clamp",
+                "Tripod grip kaki tiga meja",
+                "Pouch penyimpanan serut",
+                "Kabel pengisian USB-C"
+            ],
+            "gradient": "linear-gradient(135deg, #0d9488, #115e59)",
+            "icon": "camera"
+        },
+        {
+            "id": 8,
+            "name": "Tripod dan tas kamera",
+            "category": "Kamera dan video",
+            "subcategory": "Tas kamera",
+            "pricePerDay": 30000,
+            "deposit": 50000,
+            "distance": 0.5,
+            "rating": 4.5,
+            "reviewsCount": 29,
+            "lat": -6.2410,
+            "lng": 106.7960,
+            "area": "Kebayoran Baru, Jakarta Selatan",
+            "desc": "Tripod aluminium kokoh Manfrotto Befree dengan Ball Head 360 derajat + ransel kamera water-resistant muat 2 bodi kamera dan 3 lensa beserta laptop 14 inci.",
+            "packageContents": [
+                "Tripod Manfrotto Befree Aluminium",
+                "Quick Release Plate",
+                "Tas ransel kamera dengan sekat velcro",
+                "Raincover anti air darurat"
+            ],
+            "gradient": "linear-gradient(135deg, #52525b, #27272a)",
+            "icon": "camera"
+        },
+
+        # Elektronik
+        {
+            "id": 9,
+            "name": "Speaker bluetooth portabel",
+            "category": "Elektronik",
+            "subcategory": "Audio",
+            "pricePerDay": 45000,
+            "deposit": 100000,
+            "distance": 1.1,
+            "rating": 4.7,
+            "reviewsCount": 38,
+            "lat": -6.2360,
+            "lng": 106.8120,
+            "area": "Senopati, Jakarta Selatan",
+            "desc": "JBL Charge 5 Original. Dentuman bass bertenaga dengan teknologi JBL Pro Sound, ketahanan baterai hingga 20 jam dan sertifikasi tahan air & debu IP67. Bisa berfungsi sebagai powerbank darurat.",
+            "packageContents": [
+                "Speaker JBL Charge 5",
+                "Kabel charger USB-C",
+                "Hard carrying case beritsleting"
+            ],
+            "gradient": "linear-gradient(135deg, #ea580c, #c2410c)",
+            "icon": "music"
+        },
+        {
+            "id": 10,
+            "name": "Drone DJI Mini 2 SE",
+            "category": "Elektronik",
+            "subcategory": "Drone",
+            "pricePerDay": 200000,
+            "deposit": 400000,
+            "distance": 2.5,
+            "rating": 4.9,
+            "reviewsCount": 25,
+            "lat": -6.2250,
+            "lng": 106.8280,
+            "area": "Kuningan, Jakarta Selatan",
+            "desc": "Drone ringkas di bawah 249 gram dengan kamera 2.7K dan gimbal 3-axis stabil. Transmisi video jernih hingga 10 km dan waktu terbang 31 menit per baterai. Sangat mudah diterbangkan untuk pemula.",
+            "packageContents": [
+                "Unit Drone DJI Mini 2 SE",
+                "Remote Controller RC-N1",
+                "3x Baterai Intelligent Flight",
+                "Two-Way Charging Hub",
+                "Kabel konektor smartphone (Lightning & USB-C)",
+                "Baling-baling cadangan",
+                "Tas bahu resmi DJI"
+            ],
+            "gradient": "linear-gradient(135deg, #0284c7, #075985)",
+            "icon": "aperture"
+        },
+        {
+            "id": 11,
+            "name": "Laptop gaming RTX",
+            "category": "Elektronik",
+            "subcategory": "Komputer",
+            "pricePerDay": 150000,
+            "deposit": 350000,
+            "distance": 1.9,
+            "rating": 4.8,
+            "reviewsCount": 19,
+            "lat": -6.2450,
+            "lng": 106.8450,
+            "area": "Pancoran, Jakarta Selatan",
+            "desc": "ASUS ROG Strix G15. Prosesor AMD Ryzen 7 5800H dengan kartu grafis NVIDIA GeForce RTX 3060 6GB GDDR6, RAM 16GB dual channel, SSD 1TB NVMe, layar 144Hz sRGB 100%. Siap untuk render video 4K dan gaming berat.",
+            "packageContents": [
+                "Laptop ASUS ROG Strix G15",
+                "Adaptor charger original 240W",
+                "Mouse gaming Logitech G102",
+                "Mousepad lebar extended",
+                "Tas ransel laptop ROG"
+            ],
+            "gradient": "linear-gradient(135deg, #4f46e5, #3730a3)",
+            "icon": "monitor"
+        },
+        {
+            "id": 12,
+            "name": "Proyektor mini HD",
+            "category": "Elektronik",
+            "subcategory": "Proyektor",
+            "pricePerDay": 90000,
+            "deposit": 200000,
+            "distance": 1.8,
+            "rating": 4.6,
+            "reviewsCount": 31,
+            "lat": -6.2840,
+            "lng": 106.8430,
+            "area": "Pasar Minggu, Jakarta Selatan",
+            "desc": "Anker Nebula Capsule Mini Projector. Desain seringkas kaleng minuman bersoda dengan proyeksi gambar hingga 100 inci dan speaker 360 derajat. Terdapat OS Android bawaan untuk menonton Netflix, YouTube, dan mirroring presentasi.",
+            "packageContents": [
+                "Proyektor Nebula Capsule",
+                "Remote control",
+                "Mini tripod meja fleksibel",
+                "Adaptor charger & kabel micro-USB",
+                "Pouch pelindung portabel"
+            ],
+            "gradient": "linear-gradient(135deg, #0891b2, #0e7490)",
+            "icon": "tv"
+        },
+
+        # Perkakas
+        {
+            "id": 13,
+            "name": "Bor listrik dan set mata bor",
+            "category": "Perkakas",
+            "subcategory": "Perkakas mesin",
+            "pricePerDay": 40000,
+            "deposit": 100000,
+            "distance": 0.9,
+            "rating": 4.7,
+            "reviewsCount": 48,
+            "lat": -6.2470,
+            "lng": 106.8020,
+            "area": "Kebayoran Baru, Jakarta Selatan",
+            "desc": "Bosch Impact Drill 13mm GSB 550 Professional. Tenaga motor 550W handal untuk melubangi tembok beton, batu bata, kayu, dan lembaran besi. Kecepatan variabel dengan putaran bolak-balik.",
+            "packageContents": [
+                "Mesin bor Bosch GSB 550",
+                "Kunci chuck kepala bor",
+                "Set mata bor besi, kayu, dan beton (15 pcs)",
+                "Pegangan handle tambahan",
+                "Pengukur kedalaman (depth stop)",
+                "Koper box jinjing Bosch"
+            ],
+            "gradient": "linear-gradient(135deg, #0369a1, #1e3a8a)",
+            "icon": "tool"
+        },
+        {
+            "id": 14,
+            "name": "Mesin cuci tekanan tinggi",
+            "category": "Perkakas",
+            "subcategory": "Pembersih",
+            "pricePerDay": 55000,
+            "deposit": 120000,
+            "distance": 1.6,
+            "rating": 4.6,
+            "reviewsCount": 36,
+            "lat": -6.2620,
+            "lng": 106.8180,
+            "area": "Kemang, Jakarta Selatan",
+            "desc": "Karcher K2 High Pressure Washer 110 Bar. Ampuh merontokkan lumut di lantai paving blok garasi, mencuci mobil, membersihkan AC, dan membersihkan pagar rumah dengan konsumsi air hemat.",
+            "packageContents": [
+                "Unit mesin Karcher K2",
+                "Selang tekanan tinggi 6 meter",
+                "Spray gun tembak ergonomis",
+                "Dirt blaster nozzle untuk kotoran membandel",
+                "Botol foam lance sabun salju"
+            ],
+            "gradient": "linear-gradient(135deg, #eab308, #ca8a04)",
+            "icon": "tool"
+        },
+        {
+            "id": 15,
+            "name": "Gergaji mesin circular listrik",
+            "category": "Perkakas",
+            "subcategory": "Pemotong",
+            "pricePerDay": 35000,
+            "deposit": 80000,
+            "distance": 2.1,
+            "rating": 4.5,
+            "reviewsCount": 20,
+            "lat": -6.2550,
+            "lng": 106.7920,
+            "area": "Gandaria, Jakarta Selatan",
+            "desc": "Makita Circular Saw 7-1/4 inch 1050W. Pemotong kayu presisi dengan mata pisau TCT tajam. Pengaturan kedalaman potong dan sudut kemiringan bevel hingga 45 derajat untuk proyek mebel atau renovasi rumah.",
+            "packageContents": [
+                "Unit Makita Circular Saw",
+                "Mata pisau potong kayu TCT 40T",
+                "Mistar pemandu lurus (parallel guide)",
+                "Kunci pas pembuka bilah"
+            ],
+            "gradient": "linear-gradient(135deg, #0f766e, #134e4a)",
+            "icon": "tool"
+        },
+
+        # Camping dan outdoor
+        {
+            "id": 16,
+            "name": "Tenda kapasitas 4 orang",
+            "category": "Camping dan outdoor",
+            "subcategory": "Tenda",
+            "pricePerDay": 60000,
+            "deposit": 100000,
+            "distance": 2.0,
+            "rating": 4.8,
+            "reviewsCount": 65,
+            "lat": -6.2710,
+            "lng": 106.8200,
+            "area": "Kemang, Jakarta Selatan",
+            "desc": "Naturehike Village 5.0 Automatic Tent. Tenda camping keluarga kapasitas 4-5 orang dengan sistem rangka hidrolik otomatis yang bisa berdiri dalam 2 menit. Lapisan ganda tahan hujan deras dan terpaan angin gunung.",
+            "packageContents": [
+                "Tenda utama Naturehike Village 5.0",
+                "Outer flysheet waterproof 3000mm",
+                "Set pasak baja dan tali reflektif",
+                "Sepasang tiang kanopi pintu teras",
+                "Tas pembungkus ransel oxford"
+            ],
+            "gradient": "linear-gradient(135deg, #15803d, #14532d)",
+            "icon": "compass"
+        },
+        {
+            "id": 17,
+            "name": "Sleeping bag goose down",
+            "category": "Camping dan outdoor",
+            "subcategory": "Perlengkapan tidur",
+            "pricePerDay": 25000,
+            "deposit": 50000,
+            "distance": 1.4,
+            "rating": 4.7,
+            "reviewsCount": 40,
+            "lat": -6.2390,
+            "lng": 106.8040,
+            "area": "Senopati, Jakarta Selatan",
+            "desc": "Sleeping bag bulu angsa ultra hangat dengan batas kenyamanan suhu 5°C. Sangat ringan (750 gram) dan mudah dikompresi hingga seukuran botol air 1 liter.",
+            "packageContents": [
+                "Sleeping bag goose down",
+                "Tas kompresi compression sack",
+                "Liner katun pelindung dalam higienis"
+            ],
+            "gradient": "linear-gradient(135deg, #166534, #064e3b)",
+            "icon": "compass"
+        },
+        {
+            "id": 18,
+            "name": "Kompor camping portable + nesting",
+            "category": "Camping dan outdoor",
+            "subcategory": "Alat masak outdoor",
+            "pricePerDay": 20000,
+            "deposit": 40000,
+            "distance": 1.0,
+            "rating": 4.6,
+            "reviewsCount": 49,
+            "lat": -6.2430,
+            "lng": 106.8080,
+            "area": "Kebayoran Baru, Jakarta Selatan",
+            "desc": "Set kompor windproof lipat dengan pemantik piezo elektrik + nesting panci aluminium anodized lengkap untuk 2-3 orang. Praktis, higienis, dan cepat mendidihkan air di alam terbuka.",
+            "packageContents": [
+                "Kompor gas portable lipat dengan pelindung angin",
+                "Panci besar + penutup",
+                "Panci sedang",
+                "Wajan teflon mini penggorengan",
+                "3x Mangkuk mini & centong kayu",
+                "Pouch jaring pembungkus"
+            ],
+            "gradient": "linear-gradient(135deg, #b45309, #78350f)",
+            "icon": "compass"
+        },
+
+        # Olahraga
+        {
+            "id": 19,
+            "name": "Sepeda gunung MTB Polygon",
+            "category": "Olahraga",
+            "subcategory": "Sepeda",
+            "pricePerDay": 75000,
+            "deposit": 150000,
+            "distance": 2.8,
+            "rating": 4.7,
+            "reviewsCount": 28,
+            "lat": -6.2810,
+            "lng": 106.8110,
+            "area": "Cilandak, Jakarta Selatan",
+            "desc": "Polygon Premier 5 ukuran ban 27.5 inci, frame alloy AL6 ringan dan kokoh. Shifter Shimano 2x9 speed, rem cakram hidrolik tektro pakem, suspensi depan empuk untuk jalur offroad maupun aspal perkotaan.",
+            "packageContents": [
+                "Sepeda MTB Polygon Premier 5",
+                "Helm sepeda bersertifikasi SNI",
+                "Kunci gembok kabel kombinasi angka",
+                "Pompa mini portable terpasang di frame"
+            ],
+            "gradient": "linear-gradient(135deg, #dc2626, #991b1b)",
+            "icon": "activity"
+        },
+        {
+            "id": 20,
+            "name": "Papan surfing funboard 7ft",
+            "category": "Olahraga",
+            "subcategory": "Selancar air",
+            "pricePerDay": 80000,
+            "deposit": 200000,
+            "distance": 3.5,
+            "rating": 4.8,
+            "reviewsCount": 16,
+            "lat": -6.2950,
+            "lng": 106.7930,
+            "area": "Fatmawati, Jakarta Selatan",
+            "desc": "Soft top surfboard 7'0\" dengan volume 55 liter. Sangat ramah pemula hingga menengah, stabil, mudah mendayung ombak, dan aman dari benturan keras.",
+            "packageContents": [
+                "Papan surfing foamie 7ft",
+                "3x Fins thruster set terpasang",
+                "Tali leash kaki 7ft",
+                "Boardbag padded pelindung busa"
+            ],
+            "gradient": "linear-gradient(135deg, #0284c7, #0369a1)",
+            "icon": "activity"
+        },
+        {
+            "id": 21,
+            "name": "Set stick golf lengkap + bag",
+            "category": "Olahraga",
+            "subcategory": "Golf",
+            "pricePerDay": 120000,
+            "deposit": 300000,
+            "distance": 2.2,
+            "rating": 4.9,
+            "reviewsCount": 21,
+            "lat": -6.2310,
+            "lng": 106.8220,
+            "area": "Kuningan, Jakarta Selatan",
+            "desc": "Callaway X Hot Full Set (Driver 10.5°, 3-Wood, 4-Hybrid, Iron set 5-9, Pitching Wedge, Sand Wedge, Odyssey Putter). Regular graphite shaft, cocok untuk driving range atau 18-hole round.",
+            "packageContents": [
+                "Set stik golf Callaway 11 pcs",
+                "Odyssey White Hot Putter",
+                "Callaway Stand Bag premium",
+                "3x Headcover pelindung stik wood"
+            ],
+            "gradient": "linear-gradient(135deg, #15803d, #1e293b)",
+            "icon": "activity"
+        },
+
+        # Pesta dan acara
+        {
+            "id": 22,
+            "name": "Set dekorasi pesta lengkap",
+            "category": "Pesta dan acara",
+            "subcategory": "Dekorasi",
+            "pricePerDay": 100000,
+            "deposit": 200000,
+            "distance": 1.7,
+            "rating": 4.8,
+            "reviewsCount": 35,
+            "lat": -6.2510,
+            "lng": 106.8140,
+            "area": "Kemang, Jakarta Selatan",
+            "desc": "Arch backdrop lingkaran besi gold diameter 2 meter + neon sign bertuliskan 'Happy Birthday' & 'Better Together' + lampu fairy light 20 meter dan dudukan kue cantik.",
+            "packageContents": [
+                "Rangka arch lingkaran bongkar pasang 2m",
+                "2x Neon sign akrilik LED warm white",
+                "Lampu string fairy light 20 meter",
+                "Set 3 dudukan kue tart akrilik bertingkat",
+                "Pompa balon elektrik dual nozzle"
+            ],
+            "gradient": "linear-gradient(135deg, #ec4899, #be185d)",
+            "icon": "gift"
+        },
+        {
+            "id": 23,
+            "name": "Sound system portable + 2 mic wireless",
+            "category": "Pesta dan acara",
+            "subcategory": "Audio panggung",
+            "pricePerDay": 150000,
+            "deposit": 300000,
+            "distance": 1.3,
+            "rating": 4.9,
+            "reviewsCount": 46,
+            "lat": -6.2340,
+            "lng": 106.8250,
+            "area": "Senopati, Jakarta Selatan",
+            "desc": "Speaker aktif trolley bertenaga 120W RMS dengan baterai internal tahan 6 jam. Sudah dilengkapi 2 microphone UHF wireless anti-storing, konektivitas Bluetooth, USB, dan input gitar/keyboard.",
+            "packageContents": [
+                "Speaker portable 12 inci beroda trolley",
+                "2x Mic wireless UHF logam",
+                "Stand speaker tiang kokoh",
+                "Kabel charger AC & kabel jack audio",
+                "Remote kontrol"
+            ],
+            "gradient": "linear-gradient(135deg, #6366f1, #4338ca)",
+            "icon": "music"
+        },
+        {
+            "id": 24,
+            "name": "Mesin kabut smoke machine 500W",
+            "category": "Pesta dan acara",
+            "subcategory": "Efek panggung",
+            "pricePerDay": 60000,
+            "deposit": 100000,
+            "distance": 2.6,
+            "rating": 4.5,
+            "reviewsCount": 17,
+            "lat": -6.2750,
+            "lng": 106.8320,
+            "area": "Pasar Minggu, Jakarta Selatan",
+            "desc": "Mesin asap kabut panggung dengan lampu LED RGB terintegrasi. Menciptakan atmosfer meriah dan dramatis untuk pesta ulang tahun, pentas seni, photoshoot misterius, atau pertunjukan DJ.",
+            "packageContents": [
+                "Unit mesin asap 500W",
+                "Remote nirkabel kontrol semprotan",
+                "Kabel daya listrik 2m",
+                "1 liter cairan fog fluid water-based tanpa bau"
+            ],
+            "gradient": "linear-gradient(135deg, #9333ea, #581c87)",
+            "icon": "gift"
+        },
+
+        # Rumah tangga
+        {
+            "id": 25,
+            "name": "Vacuum cleaner wet & dry",
+            "category": "Rumah tangga",
+            "subcategory": "Pembersih rumah",
+            "pricePerDay": 35000,
+            "deposit": 80000,
+            "distance": 0.7,
+            "rating": 4.6,
+            "reviewsCount": 41,
+            "lat": -6.2415,
+            "lng": 106.7995,
+            "area": "Kebayoran Baru, Jakarta Selatan",
+            "desc": "Karcher WD 1s Multifungsi. Menghisap debu kering, genangan air tumpah, dan meniup debu sudut sulit dengan fungsi blower. Tangki stainless steel higienis kapasitas 18 liter.",
+            "packageContents": [
+                "Unit vacuum cleaner Karcher WD 1s",
+                "Selang hisap fleksibel 1.8 meter",
+                "2x Pipa ekstensi hisap",
+                "Nozzle lantai basah & kering",
+                "Crevice nozzle untuk sela sofa dan sudut sempit",
+                "Filter busa pelindung motor"
+            ],
+            "gradient": "linear-gradient(135deg, #0284c7, #0f766e)",
+            "icon": "home"
+        },
+        {
+            "id": 26,
+            "name": "Mesin jahit portable elektrik",
+            "category": "Rumah tangga",
+            "subcategory": "Menjahit",
+            "pricePerDay": 40000,
+            "deposit": 100000,
+            "distance": 1.5,
+            "rating": 4.7,
+            "reviewsCount": 23,
+            "lat": -6.2500,
+            "lng": 106.8090,
+            "area": "Blok M, Jakarta Selatan",
+            "desc": "Singer Simple 3223. Mesin jahit ringkas dengan 23 pola jahitan dekoratif, lubang kancing 4 langkah otomatis, dan pengatur ketegangan benang presisi. Mudah dioperasikan bahkan untuk pemula.",
+            "packageContents": [
+                "Mesin jahit Singer 3223",
+                "Pedal gas pedal injak elektrik",
+                "Set sepatu jahit multifungsi",
+                "5x Spool benang",
+                "Jarum cadangan aneka ukuran",
+                "Soft dust cover pelindung debu"
+            ],
+            "gradient": "linear-gradient(135deg, #e11d48, #9f1239)",
+            "icon": "home"
+        },
+        {
+            "id": 27,
+            "name": "Oven listrik 30 liter",
+            "category": "Rumah tangga",
+            "subcategory": "Dapur",
+            "pricePerDay": 30000,
+            "deposit": 70000,
+            "distance": 2.3,
+            "rating": 4.5,
+            "reviewsCount": 19,
+            "lat": -6.2680,
+            "lng": 106.8290,
+            "area": "Kemang, Jakarta Selatan",
+            "desc": "Mito Fantasy 2 MO-888 Kapasitas 30L. Dilengkapi kipas konveksi (Diamond Cavity) untuk memanggang kue kering nastar, roti, hingga ayam panggang utuh berputar otomatis dengan fungsi Rotisserie.",
+            "packageContents": [
+                "Oven listrik Mito 30L",
+                "Nampan panggangan enamel",
+                "Rak kawat stainless steel",
+                "Nampan remah bawah",
+                "Tongkat rotisserie pemanggang ayam",
+                "Gagang pengangkat loyang anti panas"
+            ],
+            "gradient": "linear-gradient(135deg, #d97706, #92400e)",
+            "icon": "home"
+        }
+    ]
+
+    print(f"Total items in catalog: {len(catalog)}")
+    return catalog
+
+if __name__ == "__main__":
+    build()
