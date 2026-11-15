@@ -5,9 +5,9 @@
 
 window.RentfyData = {
   user: {
-    name: "Rina",
-    email: "rina@email.com",
-    avatar: "R",
+    name: "LeBron James",
+    email: "lebron@email.com",
+    avatar: "L",
     location: "Jakarta Selatan",
     phone: "0812-3456-7890"
   },

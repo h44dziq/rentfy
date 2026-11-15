@@ -16,60 +16,79 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
   
-  <!-- SVG Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230F5C63'><circle cx='12' cy='12' r='10'/><path d='M12 7l5 4h-3v5h-4v-5H7z' fill='%23ffffff'/></svg>">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images/logo.png">
 </head>
 <body>
 
-  <!-- Persistent Desktop Navbar (Referensi.md 64px height, hairline border) -->
+  <!-- Persistent Desktop Navbar (Balanced 3-Column Spacing) -->
   <header id="top-nav" class="top-nav" style="display: none;">
     <div class="container nav-inner">
+      <!-- Left: Brand -->
       <a href="#/" class="nav-brand">
-        Rentfy<span class="brand-dot"></span>
+        <img src="images/logo.png" alt="Rentfy" class="brand-logo-img">
       </a>
 
-      <!-- Compact Nav Search Bar -->
-      <div class="nav-compact-search">
-        <span class="icon-svg" style="color: var(--color-smoke);">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        </span>
-        <input type="text" id="nav-input" placeholder="Cari barang sewa...">
+      <!-- Center: Compact Nav Search Bar -->
+      <div class="nav-center" id="nav-center-wrap">
+        <div class="nav-compact-search">
+          <span class="icon-svg" id="nav-search-btn" style="color: var(--color-smoke); cursor: pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </span>
+          <input type="text" id="nav-input" placeholder="Cari barang sewa...">
+        </div>
       </div>
 
-      <nav class="nav-menu">
-        <a href="#/how-it-works" class="nav-item">Cara Kerja</a>
-        <a href="#/orders" class="nav-item">Pesanan</a>
-      </nav>
+      <!-- Right: Navigation Menu & User Actions -->
+      <div class="nav-right">
+        <nav class="nav-menu">
+          <a href="#/how-it-works" class="nav-item">Cara Kerja</a>
+          <a href="#/orders" class="nav-item">Pesanan</a>
+        </nav>
 
-      <div class="nav-actions">
-        <button class="nav-icon-circle" onclick="demoToast()" title="Notifikasi">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        </button>
-        <a href="#/chat" class="nav-icon-circle" title="Pesan">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-        </a>
-        <a href="#/profile" class="nav-avatar-btn" title="Profil Rina">R</a>
+        <div class="nav-actions">
+          <button class="nav-icon-circle" onclick="demoToast()" title="Notifikasi">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </button>
+          <a href="#/chat" class="nav-icon-circle" title="Pesan">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </a>
+          <a href="#/profile" class="nav-avatar-btn" title="Profil LeBron James" id="nav-avatar">L</a>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- Trending Tag Bar (Referensi.md Component) -->
+  <!-- Trending Tag Bar (Populer: ...) -->
   <div id="trending-strip" class="trending-strip" style="display: none;">
     <div class="container trending-inner">
       <span class="trending-label">Populer:</span>
       <a href="#/search?q=kamera+mirrorless" class="trending-link">Kamera Mirrorless</a>
-      <span>•</span>
+      <span class="trending-sep">•</span>
       <a href="#/search?q=tenda" class="trending-link">Tenda Camping</a>
-      <span>•</span>
+      <span class="trending-sep">•</span>
       <a href="#/search?q=gopro" class="trending-link">GoPro Hero</a>
-      <span>•</span>
+      <span class="trending-sep">•</span>
       <a href="#/search?q=bor" class="trending-link">Bor Listrik</a>
-      <span>•</span>
+      <span class="trending-sep">•</span>
       <a href="#/search?q=proyektor" class="trending-link">Proyektor Mini</a>
-      <span>•</span>
+      <span class="trending-sep">•</span>
       <a href="#/search?q=sound" class="trending-link">Sound System</a>
     </div>
   </div>
+
+  <!-- Sub-Navbar: Categories Strip (Hygglo & Fiverr Pattern) -->
+  <nav id="category-subnav" class="category-subnav" style="display: none;">
+    <div class="container subnav-inner">
+      <a href="#/search?cat=kamera" class="subnav-item">Kamera & Video</a>
+      <a href="#/search?cat=elektronik" class="subnav-item">Elektronik</a>
+      <a href="#/search?cat=perkakas" class="subnav-item">Perkakas</a>
+      <a href="#/search?cat=camping" class="subnav-item">Camping & Outdoor</a>
+      <a href="#/search?cat=olahraga" class="subnav-item">Olahraga</a>
+      <a href="#/search?cat=pesta" class="subnav-item">Pesta & Acara</a>
+      <a href="#/search?cat=rumahtangga" class="subnav-item">Rumah Tangga</a>
+    </div>
+  </nav>
 
   <!-- App Main Content Host -->
   <main id="app"></main>
@@ -79,9 +98,9 @@
     <div class="container">
       <div class="footer-cols">
         <div>
-          <h3 style="color: #ffffff; font-size: 22px; margin-bottom: 12px; font-family: var(--font-heading);">
-            Rentfy<span style="color: var(--color-teal);">.</span>
-          </h3>
+          <a href="#/" style="display: inline-block;">
+            <img src="images/logo.png" alt="Rentfy" class="footer-logo-img">
+          </a>
           <p style="color: var(--color-mist); font-size: 14px; line-height: 1.6; max-width: 320px;">
             Sewa dan sewakan barang dengan sederhana dan aman. Menghubungkan ribuan penyewa dan pemilik barang berkualitas di sekitarmu.
           </p>

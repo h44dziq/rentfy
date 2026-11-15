@@ -60,9 +60,9 @@
     verifyStep: 1,
 
     messages: [
-      { sender: 'Dimas', text: 'Halo Rina! Ada yang bisa saya bantu terkait unit kameranya?', time: '10:15' },
-      { sender: 'Rina', text: 'Halo Mas Dimas, mau tanya apakah paketnya sudah termasuk tas dan memory card?', time: '10:17' },
-      { sender: 'Dimas', text: 'Sudah lengkap Rina, siap pakai langsung untuk kebutuhan dokumentasi.', time: '10:18' }
+      { sender: 'Dimas', text: 'Halo LeBron! Ada yang bisa saya bantu terkait unit kameranya?', time: '10:15' },
+      { sender: 'LeBron James', text: 'Halo Mas Dimas, mau tanya apakah paketnya sudah termasuk tas dan memory card?', time: '10:17' },
+      { sender: 'Dimas', text: 'Sudah lengkap LeBron, siap pakai langsung untuk kebutuhan dokumentasi.', time: '10:18' }
     ]
   };
 
@@ -114,22 +114,53 @@
 
     var app = document.getElementById('app');
     var nav = document.getElementById('top-nav');
-    var trending = document.getElementById('trending-strip');
+    var subnav = document.getElementById('category-subnav');
     var footer = document.getElementById('site-footer');
 
     if (hash === '#/login') {
       nav.style.display = 'none';
-      if (trending) trending.style.display = 'none';
+      if (subnav) subnav.style.display = 'none';
       footer.style.display = 'none';
       renderLogin(app);
     } else if (hash === '#/register') {
       nav.style.display = 'none';
-      if (trending) trending.style.display = 'none';
+      if (subnav) subnav.style.display = 'none';
       footer.style.display = 'none';
       renderRegister(app);
     } else {
       nav.style.display = 'block';
-      if (trending) trending.style.display = (hash === '#/' || hash === '#/home') ? 'block' : 'none';
+      var trending = document.getElementById('trending-strip');
+      var isHome = (hash === '#/' || hash === '#/home');
+      var isSearch = (hash.indexOf('#/search') === 0);
+
+      // Trending tag bar: visible on home and search
+      if (trending) trending.style.display = (isHome || isSearch) ? 'block' : 'none';
+      if (subnav) subnav.style.display = (isHome || isSearch) ? 'block' : 'none';
+
+      // Navbar search bar:
+      // Di Beranda & Kategori: searchbar di navbar disembunyikan saat di posisi atas
+      // agar tidak dobel dengan hero search bar halaman. Saat di-scroll, baru muncul.
+      // Di halaman lain (detail barang, pesanan, dsb): searchbar navbar langsung aktif.
+      var hasPageSearch = isHome || isSearch;
+      var navCenter = document.getElementById('nav-center-wrap');
+      if (navCenter) {
+        if (hasPageSearch) {
+          navCenter.classList.add('hidden-nav-search');
+        } else {
+          navCenter.classList.remove('hidden-nav-search');
+        }
+      }
+
+      // Sync navbar search input value
+      var navInput = document.getElementById('nav-input');
+      if (navInput) {
+        if (isSearch) {
+          var params = new URLSearchParams(hash.split('?')[1] || '');
+          navInput.value = params.get('q') || '';
+        } else if (isHome) {
+          navInput.value = '';
+        }
+      }
 
       if (hash === '#/' || hash === '#/home') {
         footer.style.display = 'block';
@@ -195,10 +226,8 @@
     container.innerHTML = `
       <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; background: #f8fafc;">
         <div style="width: 100%; max-width: 420px; background: #ffffff; border: 1px solid var(--color-mist); border-radius: var(--radius-cards); box-shadow: var(--shadow-md); padding: 40px;">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <div style="font-family: var(--font-heading); font-size: 32px; font-weight: 700; color: var(--color-carbon); margin-bottom: 6px;">
-              Rentfy<span style="color: var(--color-teal); font-size: 36px;">.</span>
-            </div>
+          <div style="text-align: center; margin-bottom: 28px;">
+            <img src="images/logo.png" alt="Rentfy" style="height: 44px; width: auto; object-fit: contain; margin-bottom: 8px;">
             <p style="color: var(--color-graphite); font-size: 14px;">
               Sewa dan sewakan barang dengan sederhana dan aman
             </p>
@@ -207,7 +236,7 @@
           <form id="login-form">
             <div style="margin-bottom: 18px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Alamat Email</label>
-              <input type="email" id="login-email" class="input-field" placeholder="nama@email.com" value="rina@email.com">
+              <input type="email" id="login-email" class="input-field" placeholder="nama@email.com" value="lebron@email.com">
             </div>
             <div style="margin-bottom: 24px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Kata Sandi</label>
@@ -231,7 +260,7 @@
       e.preventDefault();
       window.AppState.isLoggedIn = true;
       window.location.hash = '#/';
-      window.showToast('Selamat datang kembali, Rina');
+      window.showToast('Selamat datang kembali, LeBron James');
     });
   }
 
@@ -242,21 +271,19 @@
     container.innerHTML = `
       <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; background: #f8fafc;">
         <div style="width: 100%; max-width: 440px; background: #ffffff; border: 1px solid var(--color-mist); border-radius: var(--radius-cards); box-shadow: var(--shadow-md); padding: 40px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <div style="font-family: var(--font-heading); font-size: 32px; font-weight: 700; color: var(--color-carbon); margin-bottom: 6px;">
-              Rentfy<span style="color: var(--color-teal);">.</span>
-            </div>
+          <div style="text-align: center; margin-bottom: 28px;">
+            <img src="images/logo.png" alt="Rentfy" style="height: 44px; width: auto; object-fit: contain; margin-bottom: 8px;">
             <p style="color: var(--color-graphite); font-size: 14px;">Daftar akun penyewa untuk mulai bertransaksi</p>
           </div>
 
           <form id="reg-form">
             <div style="margin-bottom: 16px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Nama Lengkap</label>
-              <input type="text" class="input-field" value="Rina Oktaviani">
+              <input type="text" class="input-field" value="LeBron James">
             </div>
             <div style="margin-bottom: 16px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Email</label>
-              <input type="email" class="input-field" value="rina@email.com">
+              <input type="email" class="input-field" value="lebron@email.com">
             </div>
             <div style="margin-bottom: 16px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Nomor HP / WhatsApp</label>
@@ -308,7 +335,7 @@
     var popularItems = items.slice().sort(function (a, b) { return b.rating - a.rating; }).slice(0, 4);
 
     container.innerHTML = `
-      <div class="container" style="padding-top: 40px;">
+      <div class="container" style="padding-top: 36px;">
         <div style="margin-bottom: 24px;">
           <div style="font-size: 15px; font-weight: 600; color: var(--color-teal); margin-bottom: 4px;">
             Halo, ${window.RentfyData.user.name}
@@ -442,7 +469,7 @@
       openDateModal(function () { renderHome(container); });
     });
 
-    function doSearch() {
+    function doHomeSearch() {
       var query = document.getElementById('home-search-input').value.trim();
       window.AppState.searchQuery = query || 'camera';
       if (!window.AppState.hasShownLocationModal) {
@@ -455,9 +482,9 @@
       }
     }
 
-    document.getElementById('home-search-action').addEventListener('click', doSearch);
+    document.getElementById('home-search-action').addEventListener('click', doHomeSearch);
     document.getElementById('home-search-input').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') doSearch();
+      if (e.key === 'Enter') doHomeSearch();
     });
 
     container.querySelectorAll('.service-category-card').forEach(function (card) {
@@ -618,51 +645,219 @@
   }
 
   // --------------------------------------------------------------------------
-  // DATE PICKER MODAL
+  // INTERACTIVE CALENDAR MODAL (Minimal 2 Hari Kalender)
   // --------------------------------------------------------------------------
   function openDateModal(onSelect) {
     var modal = document.createElement('div');
     modal.className = 'modal-backdrop';
-    modal.innerHTML = `
-      <div class="modal-card" style="max-width: 440px;">
-        <div class="modal-header-row">
-          <h3 style="font-size: 18px;">Pilih Masa Sewa</h3>
-          <button class="btn-ghost" id="date-close" style="font-size: 18px; font-weight: bold;">✕</button>
-        </div>
-        <div class="modal-content-area">
-          <p style="font-size: 13px; color: var(--color-graphite); margin-bottom: 16px;">
-            Masa sewa dihitung per hari kalender dengan batas minimal 2 hari sewa.
-          </p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-            <div>
-              <label style="font-size: 12px; font-weight: 600; color: var(--color-slate);">Tanggal Ambil</label>
-              <input type="text" class="input-field" value="17 Nov 2026" readonly>
-            </div>
-            <div>
-              <label style="font-size: 12px; font-weight: 600; color: var(--color-slate);">Tanggal Kembali</label>
-              <input type="text" class="input-field" value="18 Nov 2026" readonly>
-            </div>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="pill-tag pill-neutral active">2 Hari Kalender</button>
-            <button class="pill-tag pill-neutral" onclick="showToast('Durasi 3 hari dipilih')">3 Hari</button>
-            <button class="pill-tag pill-neutral" onclick="showToast('Durasi 1 minggu dipilih')">1 Minggu</button>
-          </div>
-        </div>
-        <div class="modal-footer-row">
-          <button class="btn btn-amber btn-block" id="date-confirm">
-            Terapkan Jadwal
-          </button>
-        </div>
-      </div>
-    `;
 
+    var currentDates = window.AppState.selectedDates;
+    var startDay = currentDates.startNum || parseInt(currentDates.start, 10) || 17;
+    var endDay = currentDates.endNum || parseInt(currentDates.end, 10) || 18;
+
+    function renderCalendarGrid() {
+      var daysHtml = '';
+      // Nov 1, 2026 is Sunday, so 6 leading blanks for Mon-Sat
+      for (var b = 0; b < 6; b++) {
+        daysHtml += '<div class="cal-day-cell empty"></div>';
+      }
+
+      for (var d = 1; d <= 30; d++) {
+        var isStart = (d === startDay);
+        var isEnd = (d === endDay);
+        var inRange = (d > startDay && d < endDay);
+
+        var cls = 'cal-day-cell';
+        if (isStart) cls += ' selected-start';
+        if (isEnd) cls += ' selected-end';
+        if (inRange) cls += ' in-range';
+
+        daysHtml += '<div class="' + cls + '" data-day="' + d + '">' + d + '</div>';
+      }
+
+      var dur = (endDay - startDay) + 1;
+
+      return `
+        <div class="modal-card" style="max-width: 500px;">
+          <div class="modal-header-row">
+            <div>
+              <h3 style="font-size: 18px; margin-bottom: 2px;">Pilih Periode Sewa</h3>
+              <div style="font-size: 12px; color: var(--color-smoke);">Minimal sewa 2 hari kalender • Dihitung per hari kalender</div>
+            </div>
+            <button class="btn-ghost" id="date-close-btn" style="font-size: 18px; font-weight: bold;">✕</button>
+          </div>
+
+          <div class="modal-content-area">
+            <!-- Calendar Grid Container -->
+            <div class="calendar-widget">
+              <div class="calendar-header">
+                <button class="cal-nav-btn" id="cal-prev" title="Bulan Sebelumnya">
+                  <span class="icon-svg">${Icons.arrowLeft}</span>
+                </button>
+                <div class="calendar-month-title">November 2026</div>
+                <button class="cal-nav-btn" id="cal-next" title="Bulan Berikutnya">
+                  <span class="icon-svg">${Icons.arrowRight}</span>
+                </button>
+              </div>
+
+              <div class="cal-weekdays">
+                <span>Sen</span>
+                <span>Sel</span>
+                <span>Rab</span>
+                <span>Kam</span>
+                <span>Jum</span>
+                <span>Sab</span>
+                <span>Min</span>
+              </div>
+
+              <div class="cal-days-grid" id="cal-grid">
+                ${daysHtml}
+              </div>
+            </div>
+
+            <!-- Quick Duration Presets -->
+            <div style="margin-top: 14px;">
+              <div style="font-size: 12px; font-weight: 600; color: var(--color-slate); margin-bottom: 8px;">Pilihan Cepat:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button class="pill-tag pill-neutral ${dur === 2 && startDay === 17 ? 'active' : ''}" data-preset="2">2 Hari (17 - 18 Nov)</button>
+                <button class="pill-tag pill-neutral ${dur === 3 && startDay === 17 ? 'active' : ''}" data-preset="3">3 Hari (17 - 19 Nov)</button>
+                <button class="pill-tag pill-neutral ${dur === 7 && startDay === 17 ? 'active' : ''}" data-preset="7">1 Minggu (17 - 23 Nov)</button>
+                <button class="pill-tag pill-neutral ${dur === 14 && startDay === 17 ? 'active' : ''}" data-preset="14">2 Minggu (17 - 30 Nov)</button>
+              </div>
+            </div>
+
+            <!-- Selected Summary Box -->
+            <div class="cal-summary-box">
+              <div>
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-smoke); margin-bottom: 2px;">Tanggal Ambil</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--color-teal);">${startDay} Nov 2026</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--color-smoke); margin-bottom: 2px;">Tanggal Kembali</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--color-teal);">${endDay} Nov 2026 (${dur} Hari)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer-row" style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn btn-ghost" id="date-reset-btn" style="font-size: 13px;">Hapus Tanggal</button>
+            <button class="btn btn-amber" id="date-apply-btn" style="padding: 10px 24px;">
+              Terapkan Jadwal (${dur} Hari)
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateModal() {
+      modal.innerHTML = renderCalendarGrid();
+      bindModalEvents();
+    }
+
+    function bindModalEvents() {
+      var closeBtn = modal.querySelector('#date-close-btn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+          modal.remove();
+        });
+      }
+
+      // Close on backdrop click
+      modal.onclick = function (e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      };
+
+      // Day Click Logic
+      var dayCells = modal.querySelectorAll('.cal-day-cell[data-day]');
+      dayCells.forEach(function (cell) {
+        cell.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var d = parseInt(cell.getAttribute('data-day'), 10);
+          if (d >= endDay || d === startDay) {
+            if (d === startDay) {
+              endDay = Math.min(30, startDay + 1);
+            } else {
+              endDay = d;
+            }
+          } else if (d < startDay) {
+            startDay = d;
+            if (endDay <= startDay) {
+              endDay = Math.min(30, startDay + 1);
+            }
+          } else {
+            endDay = d;
+          }
+
+          if (endDay <= startDay) {
+            endDay = Math.min(30, startDay + 1);
+          }
+
+          updateModal();
+        });
+      });
+
+      // Preset buttons
+      modal.querySelectorAll('[data-preset]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var p = parseInt(btn.getAttribute('data-preset'), 10);
+          startDay = 17;
+          endDay = Math.min(30, startDay + p - 1);
+          updateModal();
+        });
+      });
+
+      var prevBtn = modal.querySelector('#cal-prev');
+      if (prevBtn) {
+        prevBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          window.showToast('Menampilkan bulan November 2026 (aktif)');
+        });
+      }
+
+      var nextBtn = modal.querySelector('#cal-next');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          window.showToast('Hanya bulan November 2026 yang tersedia di versi demo');
+        });
+      }
+
+      var resetBtn = modal.querySelector('#date-reset-btn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          startDay = 17;
+          endDay = 18;
+          updateModal();
+        });
+      }
+
+      var applyBtn = modal.querySelector('#date-apply-btn');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var daysCount = (endDay - startDay) + 1;
+          window.AppState.selectedDates = {
+            start: startDay + ' Nov',
+            end: endDay + ' Nov',
+            days: daysCount,
+            startNum: startDay,
+            endNum: endDay
+          };
+
+          modal.remove();
+          window.showToast('Jadwal sewa diterapkan: ' + startDay + ' - ' + endDay + ' Nov (' + daysCount + ' hari)');
+          if (onSelect) onSelect();
+        });
+      }
+    }
+
+    // Append to document FIRST, then render & bind
     document.body.appendChild(modal);
-    document.getElementById('date-close').addEventListener('click', function () { modal.remove(); });
-    document.getElementById('date-confirm').addEventListener('click', function () {
-      modal.remove();
-      if (onSelect) onSelect();
-    });
+    updateModal();
   }
 
   // --------------------------------------------------------------------------
@@ -701,11 +896,11 @@
     container.innerHTML = `
       <div style="background: #ffffff; border-bottom: 1px solid var(--color-mist); padding: 24px 0 16px; margin-bottom: 24px;">
         <div class="container">
-          <!-- Search Bar -->
+          <!-- In-Page Search Bar for Category Screen (L5) -->
           <div class="hero-search-container" style="margin-bottom: 16px;">
             <div class="search-slot slot-text">
               <span class="icon-svg" style="color: var(--color-smoke);">${Icons.search}</span>
-              <input type="text" id="search-input-field" value="${query}">
+              <input type="text" id="search-input-field" placeholder="Cari di kategori ini..." value="${query}">
             </div>
             <div class="search-divider"></div>
             <div class="search-slot" id="search-loc-trigger">
@@ -715,7 +910,15 @@
                 <div class="slot-value">${window.AppState.selectedLocation}</div>
               </div>
             </div>
-            <button class="search-dock-btn" id="search-action-btn">
+            <div class="search-divider"></div>
+            <div class="search-slot" id="search-cal-trigger">
+              <span class="icon-svg" style="color: var(--color-teal);">${Icons.calendar}</span>
+              <div>
+                <div class="slot-caption">Periode</div>
+                <div class="slot-value">${window.AppState.selectedDates.start} (${window.AppState.selectedDates.days} hari)</div>
+              </div>
+            </div>
+            <button class="search-dock-btn" id="search-action-btn" title="Cari">
               <span class="icon-svg">${Icons.search}</span>
             </button>
           </div>
@@ -814,9 +1017,17 @@
       openLocationModal(function () { renderSearch(container, hash); });
     });
 
-    document.getElementById('search-action-btn').addEventListener('click', function () {
+    document.getElementById('search-cal-trigger').addEventListener('click', function () {
+      openDateModal(function () { renderSearch(container, hash); });
+    });
+
+    function doCategorySearch() {
       var val = document.getElementById('search-input-field').value.trim();
       window.location.hash = '#/search?q=' + encodeURIComponent(val);
+    }
+    document.getElementById('search-action-btn').addEventListener('click', doCategorySearch);
+    document.getElementById('search-input-field').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') doCategorySearch();
     });
 
     document.getElementById('filter-btn').addEventListener('click', function () {
@@ -1380,7 +1591,7 @@
             </div>
 
             ${window.AppState.messages.map(function (m) {
-              var isMe = m.sender === 'Rina';
+              var isMe = m.sender === 'LeBron James' || m.sender === 'LeBron';
               return `
                 <div style="display: flex; justify-content: ${isMe ? 'flex-end' : 'flex-start'};">
                   <div style="max-width: 70%; background: ${isMe ? 'var(--color-teal)' : '#ffffff'}; color: ${isMe ? '#ffffff' : 'var(--color-carbon)'}; padding: 10px 16px; border-radius: var(--radius-inputs); box-shadow: var(--shadow-sm); font-size: 14px;">
@@ -1416,13 +1627,13 @@
 
     function sendMsg(text) {
       if (!text) return;
-      window.AppState.messages.push({ sender: 'Rina', text: text, time: 'Sekarang' });
+      window.AppState.messages.push({ sender: 'LeBron James', text: text, time: 'Sekarang' });
       renderChat(container);
 
       setTimeout(function () {
         window.AppState.messages.push({
           sender: 'Dimas',
-          text: 'Siap Rina! Nanti kabari saja kalau sudah dekat titik serah terima ya.',
+          text: 'Siap LeBron! Nanti kabari saja kalau sudah dekat titik serah terima ya.',
           time: 'Sekarang'
         });
         renderChat(container);
@@ -1587,7 +1798,7 @@
           <div style="background: #f8fafc; padding: 20px; border-radius: var(--radius-inputs); border: 1px solid var(--color-mist); margin-bottom: 24px;">
             <h4 style="font-size: 15px; margin-bottom: 8px;">Tinjau Data Identitas</h4>
             <div style="font-size: 13px; color: var(--color-slate); line-height: 1.8;">
-              <div>Nama: <strong>Rina Oktaviani</strong></div>
+              <div>Nama: <strong>LeBron James</strong></div>
               <div>NIK: <strong>3174**********01</strong></div>
               <div>Status: <span class="badge-status badge-green"><span class="icon-svg">${Icons.check}</span> Dokumen Valid</span></div>
             </div>
@@ -2145,19 +2356,46 @@
   }
 
   // --------------------------------------------------------------------------
-  // INITIALIZATION
+  // INITIALIZATION & GLOBAL NAVIGATION EVENTS
   // --------------------------------------------------------------------------
+  window.addEventListener('scroll', function () {
+    var hash = window.location.hash || '#/login';
+    var isHome = (hash === '#/' || hash === '#/home');
+    var isSearch = (hash.indexOf('#/search') === 0);
+    var hasPageSearch = isHome || isSearch;
+    var navCenter = document.getElementById('nav-center-wrap');
+
+    if (navCenter && hasPageSearch) {
+      var threshold = isHome ? 220 : 180;
+      if (window.scrollY > threshold) {
+        navCenter.classList.remove('hidden-nav-search');
+      } else {
+        navCenter.classList.add('hidden-nav-search');
+      }
+    }
+  }, { passive: true });
+
   window.addEventListener('hashchange', router);
   window.addEventListener('DOMContentLoaded', function () {
     router();
 
     var navInput = document.getElementById('nav-input');
+    var navBtn = document.getElementById('nav-search-btn');
+
+    function triggerNavSearch() {
+      if (!navInput) return;
+      var q = navInput.value.trim();
+      window.AppState.searchQuery = q;
+      window.location.hash = '#/search?q=' + encodeURIComponent(q);
+    }
+
     if (navInput) {
       navInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-          window.location.hash = '#/search?q=' + encodeURIComponent(this.value.trim());
-        }
+        if (e.key === 'Enter') triggerNavSearch();
       });
+    }
+    if (navBtn) {
+      navBtn.addEventListener('click', triggerNavSearch);
     }
   });
 
