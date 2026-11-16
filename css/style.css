@@ -61,6 +61,8 @@ body {
   background-color: var(--color-paper);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -1236,6 +1238,48 @@ input, select, textarea {
 }
 
 /* ==========================================================================
+   MOBILE BOTTOM TAB BAR (Base styles — shown via media query)
+   ========================================================================== */
+.mobile-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  background: #ffffff;
+  border-top: 1px solid var(--color-mist);
+  display: none;
+  justify-content: space-around;
+  align-items: center;
+  height: 60px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+}
+.mobile-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-smoke);
+  text-decoration: none;
+  padding: 6px 0;
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  flex: 1;
+}
+.mobile-tab-item.active {
+  color: var(--color-teal);
+}
+.mobile-tab-item .icon-svg svg {
+  transition: color 0.2s;
+}
+.mobile-tab-item.active .icon-svg svg {
+  stroke: var(--color-teal);
+}
+
+/* ==========================================================================
    RESPONSIVE BREAKPOINTS
    Tablet: <= 1024px  |  Mobile: <= 640px  |  Small Mobile: <= 400px
    ========================================================================== */
@@ -1500,13 +1544,24 @@ input, select, textarea {
     padding: 12px 16px;
   }
 
-  /* Toast */
+  /* Mobile Bottom Tab Bar — activate */
+  .mobile-tab-bar {
+    display: flex !important;
+  }
+  body {
+    padding-bottom: 60px;
+  }
+  .site-footer {
+    margin-bottom: 60px;
+  }
+
+  /* Toast — above tab bar */
   .toast-bar {
     width: calc(100% - 32px);
     max-width: 400px;
     text-align: center;
     font-size: 13px;
-    bottom: 16px;
+    bottom: 72px;
   }
 
   /* Footer */
@@ -1584,6 +1639,51 @@ input, select, textarea {
   /* Photo Upload */
   .photo-slot-clean {
     font-size: 11px;
+  }
+
+  /* Login/Register Card Mobile */
+  [style*="padding: 40px"] {
+    padding: 24px 20px !important;
+  }
+  [style*="padding: 40px 20px"] {
+    padding: 24px 16px !important;
+  }
+
+  /* Category subnav horizontal scroll on mobile */
+  .category-subnav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .subnav-inner {
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .subnav-item {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Trending strip horizontal scroll */
+  .trending-inner {
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .trending-link, .trending-label, .trending-sep {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Chat page height fix */
+  [style*="height: 70vh"] {
+    height: calc(100vh - 180px) !important;
+  }
+
+  /* Search filter pills overflow fix */
+  [style*="flex-wrap: wrap"] {
+    gap: 8px !important;
   }
 }
 

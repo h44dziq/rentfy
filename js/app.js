@@ -216,6 +216,19 @@
       }
     }
 
+    // Mobile Bottom Tab Bar — visibility & active state
+    var tabBar = document.getElementById('mobile-tab-bar');
+    if (tabBar) {
+      var hideTab = (hash === '#/login' || hash === '#/register');
+      tabBar.style.display = hideTab ? 'none' : '';
+      // Highlight active tab
+      var tabMap = { '#/': 'beranda', '#/home': 'beranda', '#/search': 'cari', '#/orders': 'pesanan', '#/profile': 'profil' };
+      var activeTab = tabMap[hash] || (hash.indexOf('#/search') === 0 ? 'cari' : '');
+      tabBar.querySelectorAll('.mobile-tab-item').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-tab') === activeTab);
+      });
+    }
+
     window.scrollTo(0, 0);
   }
 
