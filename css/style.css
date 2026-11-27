@@ -940,6 +940,13 @@ input, select, textarea {
   background: var(--color-teal-light);
 }
 
+.photo-slot-filled {
+  border: 1.5px solid var(--color-teal);
+  background: var(--color-teal-light);
+  color: var(--color-teal);
+  font-weight: 600;
+}
+
 /* --------------------------------------------------------------------------
    INTERACTIVE CALENDAR COMPONENT (Minimal 2 Hari Kalender)
    -------------------------------------------------------------------------- */

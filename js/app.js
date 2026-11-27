@@ -59,6 +59,7 @@
     currentOrder: null,
     orderStatus: 'menunggu',
     verifyStep: 1,
+    verifyNext: null,
 
     messages: [
       { sender: 'Dimas', text: 'Halo Arvin! Ada yang bisa saya bantu terkait unit kameranya?', time: '10:15' },
@@ -209,6 +210,13 @@
       } else if (hash === '#/how-it-works') {
         footer.style.display = 'block';
         renderHowItWorks(app);
+      } else if (hash === '#/complain') {
+        footer.style.display = 'none';
+        renderComplain(app);
+      } else if (hash.indexOf('#/owner') === 0) {
+        console.log('Owner route detected:', hash);
+        footer.style.display = 'block';
+        renderOwner(app, hash);
       } else {
         renderHome(app);
       }
@@ -254,6 +262,15 @@
               <input type="password" id="login-pwd" class="input-field" placeholder="••••••••" value="password123">
             </div>
 
+            <div style="margin-bottom: 28px;">
+              <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Mode Login (Demo)</label>
+              <select id="login-role" class="input-field">
+                <option value="penyewa">Penyewa (Cari dan Sewa Barang)</option>
+                <option value="pemilik">Pemilik (Kelola Listing & Booking)</option>
+              </select>
+              <div style="font-size: 11px; color: var(--color-smoke); margin-top: 4px;">Pilih role untuk demo alur sesuai PRD baru</div>
+            </div>
+
             <!-- Single Amber CTA per Screen -->
             <button type="submit" class="btn btn-amber btn-block">
               Masuk
@@ -269,9 +286,16 @@
 
     document.getElementById('login-form').addEventListener('submit', function (e) {
       e.preventDefault();
+      var role = document.getElementById('login-role') ? document.getElementById('login-role').value : 'penyewa';
       window.AppState.isLoggedIn = true;
-      window.location.hash = '#/';
-      window.showToast('Selamat datang kembali, Arvin Maulana');
+      window.RentfyData.user.role = role;
+      if (role === 'pemilik') {
+        window.location.hash = '#/owner';
+        window.showToast('Selamat datang, mode pemilik aktif');
+      } else {
+        window.location.hash = '#/';
+        window.showToast('Selamat datang kembali, Arvin Maulana');
+      }
     });
   }
 
@@ -1336,7 +1360,9 @@
         orderId: 'RF-' + Math.floor(100000 + Math.random() * 900000),
         createdAt: 'Hari ini'
       };
-      window.location.hash = '#/checkout';
+      // PRD baru: verifikasi KTP langsung muncul saat "Ajukan Sewa"
+      window.AppState.verifyNext = '#/checkout';
+      window.location.hash = '#/verify';
     });
 
     bindCardEvents(container);
@@ -1353,7 +1379,7 @@
     }
 
     var item = order.item;
-    var totalCost = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var totalCost = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     container.innerHTML = `
       <div class="step-card-centered">
@@ -1390,6 +1416,10 @@
           <div class="cost-row">
             <span>Biaya Perlindungan Barang</span>
             <span>${formatRp(order.pricing.perlindungan)}</span>
+          </div>
+          <div class="cost-row">
+            <span>Biaya layanan Rentfy (10%)</span>
+            <span>${formatRp(order.pricing.commission)}</span>
           </div>
           <div class="cost-row">
             <span>Deposit Jaminan (dikembalikan)</span>
@@ -1537,7 +1567,7 @@
     };
 
     var s = statusLabels[status] || statusLabels.menunggu;
-    var total = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var total = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     return `
       <div style="background: var(--color-paper); border: 1px solid var(--color-mist); border-radius: var(--radius-cards); padding: 24px; box-shadow: var(--shadow-sm); max-width: 760px;">
@@ -1690,7 +1720,7 @@
     }
 
     var status = window.AppState.orderStatus;
-    var total = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var total = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     var steps = [
       { id: 'menunggu', title: 'Permintaan Terkirim', desc: 'Menunggu persetujuan pemilik barang' },
@@ -1846,10 +1876,12 @@
         window.AppState.verifyStep++;
         renderVerify(container);
       } else {
-        window.showToast('Identitas terverifikasi berhasil. Menuju pembayaran...');
+        window.showToast('Identitas terverifikasi berhasil.');
+        var next = window.AppState.verifyNext || '#/payment';
+        window.AppState.verifyNext = null;
         setTimeout(function () {
-          window.location.hash = '#/payment';
-        }, 1000);
+          window.location.hash = next;
+        }, 800);
       }
     });
   }
@@ -1864,7 +1896,7 @@
       return;
     }
 
-    var total = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var total = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     container.innerHTML = `
       <div class="step-card-centered">
@@ -1878,6 +1910,36 @@
         <div style="background: #f8fafc; padding: 18px; border-radius: var(--radius-inputs); margin-bottom: 24px;">
           <div style="font-size: 13px; color: var(--color-smoke); margin-bottom: 4px;">Total yang harus dibayar:</div>
           <div style="font-size: 26px; font-weight: 700; color: var(--color-teal);">${formatRp(total)}</div>
+        </div>
+
+        <!-- Rincian biaya transparan (PRD FR-02.3 / US-04) -->
+        <div style="background: #ffffff; border: 1px solid var(--color-mist); padding: 16px 18px; border-radius: var(--radius-inputs); margin-bottom: 24px;">
+          <h4 style="font-size: 14px; margin-bottom: 12px;">Rincian Biaya (transparan sebelum bayar)</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Sewa (${order.pricing.days} hari × ${formatRp(order.pricing.pricePerDay)})</span>
+              <span>${formatRp(order.pricing.sewa)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Biaya perlindungan</span>
+              <span>${formatRp(order.pricing.perlindungan)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Biaya layanan (10%)</span>
+              <span>${formatRp(order.pricing.commission)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Deposit jaminan (dikembalikan)</span>
+              <span>${formatRp(order.deposit)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--color-mist); padding-top: 8px; font-weight: 700;">
+              <span>Total bayar</span>
+              <span style="color: var(--color-teal);">${formatRp(total)}</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--color-smoke); margin-top: 10px;">
+            Dana ditahan Rentfy (escrow) sampai barang dikembalikan dan dicek. Deposit kembali setelah masa tunggu komplain 3×24 jam.
+          </div>
         </div>
 
         <h4 style="font-size: 15px; margin-bottom: 12px;">Metode Pembayaran</h4>
@@ -1955,32 +2017,38 @@
         <!-- Interactive Map Pin -->
         <div id="pickup-map-el" class="leaflet-map-element"></div>
 
-        <h4 style="font-size: 15px; margin-top: 24px; margin-bottom: 6px;">Dokumentasi Kondisi Awal (Opsional)</h4>
-        <p style="font-size: 12px; color: var(--color-smoke);">Ambil foto kondisi fisik unit sebelum dibawa sebagai bukti serah terima.</p>
+        <h4 style="font-size: 15px; margin-top: 24px; margin-bottom: 6px;">Dokumentasi Kondisi Awal (Wajib)</h4>
+        <p style="font-size: 12px; color: var(--color-smoke);">Ambil foto kondisi fisik unit bersama pemilik sebelum dibawa sebagai bukti serah terima. <strong>Minimal 2 foto</strong> (tampak depan dan belakang) harus diunggah.</p>
         
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">
-          <div class="photo-slot-clean" onclick="showToast('Foto tampak depan tersimpan')">
+          <div class="photo-slot-clean" data-photo="front" id="photo-front">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Tampak Depan</span>
+            <small style="color: var(--color-smoke);">Belum diambil</small>
           </div>
-          <div class="photo-slot-clean" onclick="showToast('Foto tampak belakang tersimpan')">
+          <div class="photo-slot-clean" data-photo="back" id="photo-back">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Tampak Belakang</span>
+            <small style="color: var(--color-smoke);">Belum diambil</small>
           </div>
-          <div class="photo-slot-clean" onclick="showToast('Foto kelengkapan tersimpan')">
+          <div class="photo-slot-clean" data-photo="accessories" id="photo-accessories">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Kelengkapan</span>
+            <small style="color: var(--color-smoke);">Opsional</small>
           </div>
-          <div class="photo-slot-clean" onclick="showToast('Foto nomor seri tersimpan')">
+          <div class="photo-slot-clean" data-photo="serial" id="photo-serial">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Nomor Seri</span>
+            <small style="color: var(--color-smoke);">Opsional</small>
           </div>
         </div>
+        <div style="font-size: 11px; color: var(--color-amber); text-align: center; margin-top: 4px;">Foto dicap waktu otomatis. Unggah sebagai bukti bersama.</div>
 
         <!-- 1 Amber CTA -->
-        <button class="btn btn-amber btn-block" id="btn-received-ok" style="padding: 14px; margin-top: 20px;">
+        <button class="btn btn-amber btn-block" id="btn-received-ok" style="padding: 14px; margin-top: 20px;" disabled>
           Barang Sudah Saya Terima
         </button>
+        <div style="font-size: 12px; color: var(--color-smoke); text-align: center; margin-top: 6px;" id="photo-requirements">Ambil minimal 2 foto wajib di atas untuk melanjutkan.</div>
 
         <div style="text-align: center; margin-top: 14px;">
           <a href="#/chat" class="btn btn-ghost" style="font-size: 13px;">
@@ -2000,9 +2068,41 @@
       }
     }, 150);
 
+    var photosTaken = { front: false, back: false, accessories: false, serial: false };
+    function updatePhotoUI(slotId, taken) {
+      var slot = document.getElementById('photo-' + slotId);
+      if (!slot) return;
+      if (taken) {
+        slot.classList.add('photo-slot-filled');
+        slot.innerHTML = `<span class="icon-svg">${Icons.check}</span><span>${slotId === 'front' ? 'Tampak Depan' : slotId === 'back' ? 'Tampak Belakang' : slotId === 'accessories' ? 'Kelengkapan' : 'Nomor Seri'}</span><small style="color: var(--color-teal);">Sudah</small>`;
+      } else {
+        slot.classList.remove('photo-slot-filled');
+        slot.innerHTML = `<span class="icon-svg">${Icons.camera}</span><span>${slotId === 'front' ? 'Tampak Depan' : slotId === 'back' ? 'Tampak Belakang' : slotId === 'accessories' ? 'Kelengkapan' : 'Nomor Seri'}</span><small style="color: var(--color-smoke);">${slotId === 'front' || slotId === 'back' ? 'Wajib' : 'Opsional'}</small>`;
+      }
+      var requiredDone = photosTaken.front && photosTaken.back;
+      var btn = document.getElementById('btn-received-ok');
+      var hint = document.getElementById('photo-requirements');
+      if (btn) btn.disabled = !requiredDone;
+      if (hint) hint.textContent = requiredDone ? '✅ Foto wajib lengkap. Lanjutkan serah terima.' : 'Ambil minimal 2 foto wajib di atas untuk melanjutkan.';
+    }
+
+    document.querySelectorAll('.photo-slot-clean').forEach(function(slot) {
+      var photoId = slot.getAttribute('data-photo');
+      if (!photoId) return;
+      slot.addEventListener('click', function() {
+        photosTaken[photoId] = true;
+        window.showToast('Foto ' + photoId + ' tersimpan (stempel waktu: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ')');
+        updatePhotoUI(photoId, true);
+      });
+    });
+
     document.getElementById('btn-received-ok').addEventListener('click', function () {
+      if (!photosTaken.front || !photosTaken.back) {
+        window.showToast('Harap ambil foto wajib terlebih dahulu');
+        return;
+      }
       window.AppState.orderStatus = 'sedang_disewa';
-      window.showToast('Status diperbarui: Masa sewa dimulai');
+      window.showToast('Dokumentasi kondisi tersimpan. Status diperbarui: Masa sewa dimulai');
       window.location.hash = '#/renting';
     });
   }
@@ -2375,6 +2475,116 @@
     document.getElementById('filter-apply').addEventListener('click', function () {
       modal.remove();
       if (onApply) onApply();
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // OWNER MODE DASHBOARD (Stub for PRD new spec)
+  // --------------------------------------------------------------------------
+  function renderOwner(container, hash) {
+    container.innerHTML = `
+      <div class="container" style="max-width: 800px; padding-top: 32px; padding-bottom: 60px;">
+        <h1 style="font-size: 28px; margin-bottom: 20px;">Mode Pemilik</h1>
+        <p style="color: var(--color-graphite); margin-bottom: 24px;">Halaman dashboard pemilik untuk mengelola listing, menerima booking, dan dokumentasi kondisi barang.</p>
+        <div style="background: #f8fafc; border: 1px solid var(--color-mist); border-radius: var(--radius-cards); padding: 24px; text-align: center;">
+          <span class="icon-svg" style="color: var(--color-teal); transform: scale(2); margin-bottom: 16px; display: block;">${Icons.box}</span>
+          <h3 style="font-size: 18px; margin-bottom: 8px;">Fitur Pemilik (Soon)</h3>
+          <p style="color: var(--color-graphite); font-size: 13px; max-width: 500px; margin: 0 auto 16px;">Menurut PRD baru, pemilik dapat membuat listing, mengatur kalender, menerima booking, dan mengunggah foto kondisi barang.</p>
+          <a href="#/" class="btn btn-amber">Kembali ke Beranda</a>
+        </div>
+      </div>
+    `;
+  }
+
+  // --------------------------------------------------------------------------
+  // COMPLAIN CONTROLLER (US-08, FR-05.1)
+  // --------------------------------------------------------------------------
+  function renderComplain(container) {
+    var order = window.AppState.currentOrder;
+
+    container.innerHTML = `
+      <div class="step-card-centered">
+        <div class="step-title-header">
+          <span class="badge-status badge-amber" style="margin-bottom: 8px;">Penanganan Masalah</span>
+          <h2 style="font-size: 22px;">Ajukan Komplain</h2>
+          <p style="font-size: 13px; color: var(--color-graphite); margin-top: 2px;">
+            Komplain bisa diajukan maksimal 3 hari setelah pengembalian barang. Sertakan bukti agar peninjauan adil.
+          </p>
+        </div>
+
+        ${order ? `
+        <div style="background: #f8fafc; border: 1px solid var(--color-mist); padding: 14px 18px; border-radius: var(--radius-inputs); margin-bottom: 20px; font-size: 13px;">
+          <div style="font-weight: 600; margin-bottom: 2px;">${order.item.name}</div>
+          <div style="color: var(--color-graphite);">${order.dates.start} – ${order.dates.end} • ${order.orderId}</div>
+        </div>
+        ` : ''}
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Jenis Masalah</label>
+          <select class="input-field" id="complain-type">
+            <option>Barang rusak saat sewa</option>
+            <option>Barang tidak sesuai deskripsi</option>
+            <option>Keterlambatan serah terima</option>
+            <option>Kelengkapan tidak sesuai</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Kronologi Masalah</label>
+          <textarea class="input-field" rows="4" id="complain-desc" placeholder="Ceritakan kronologi kejadian sedetail mungkin..."></textarea>
+        </div>
+
+        <h4 style="font-size: 14px; margin-bottom: 8px;">Lampiran Bukti (foto/video berstempel waktu)</h4>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;" id="complain-photos">
+          <div class="photo-slot-clean" data-photo="bukti1">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 1</span>
+          </div>
+          <div class="photo-slot-clean" data-photo="bukti2">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 2</span>
+          </div>
+          <div class="photo-slot-clean" data-photo="bukti3">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 3</span>
+          </div>
+          <div class="photo-slot-clean" data-photo="bukti4">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 4</span>
+          </div>
+        </div>
+
+        <div style="background: var(--color-teal-light); padding: 12px 16px; border-radius: var(--radius-buttons); font-size: 12px; color: var(--color-forest-stage); margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+          <span class="icon-svg" style="color: var(--color-teal);">${Icons.shield}</span>
+          Keputusan admin didasarkan bukti dokumentasi kondisi sebelum dan sesudah sewa.
+        </div>
+
+        <!-- 1 Amber CTA -->
+        <button class="btn btn-amber btn-block" id="btn-complain-send" style="padding: 14px;">Kirim Komplain</button>
+      </div>
+    `;
+
+    var complainPhotos = 0;
+    container.querySelectorAll('.photo-slot-clean').forEach(function (slot) {
+      slot.addEventListener('click', function () {
+        if (!slot.classList.contains('photo-slot-filled')) {
+          complainPhotos++;
+          slot.classList.add('photo-slot-filled');
+          slot.innerHTML = `<span class="icon-svg">${Icons.check}</span><span>Bukti ${complainPhotos}</span>`;
+          window.showToast('Bukti tersimpan (stempel waktu otomatis)');
+        }
+      });
+    });
+
+    document.getElementById('btn-complain-send').addEventListener('click', function () {
+      var desc = document.getElementById('complain-desc').value.trim();
+      if (!desc) {
+        window.showToast('Tulis kronologi masalah terlebih dahulu');
+        return;
+      }
+      this.textContent = 'Mengirim Komplain...';
+      this.disabled = true;
+      setTimeout(function () {
+        window.showToast('Komplain masuk antrean tinjauan. Admin akan memutuskan maksimal 7 hari.');
+        window.location.hash = '#/orders';
+      }, 1000);
     });
   }
 

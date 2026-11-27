@@ -9,7 +9,8 @@ window.RentfyData = {
     email: "arvin@email.com",
     avatar: "A",
     location: "Jakarta Selatan",
-    phone: "0812-3456-7890"
+    phone: "0812-3456-7890",
+    role: "penyewa" // "penyewa" atau "pemilik"
   },
 
   owner: {
@@ -21,8 +22,53 @@ window.RentfyData = {
     responseTime: "Biasanya membalas dalam beberapa menit",
     location: "Kebayoran Baru, Jakarta Selatan",
     address: "Jl. Gandaria I No. 18, Kebayoran Baru, Jakarta Selatan",
-    pickupTime: "10:00 - 18:00 WIB"
+    pickupTime: "10:00 - 18:00 WIB",
+    phone: "0811-2233-4455",
+    joinedDate: "Jan 2026",
+    totalListings: 8,
+    completionRate: "96%"
   },
+
+  // Data for owner mode (listing management, bookings)
+  ownerListings: [
+    {
+      id: 1,
+      title: "Kamera mirrorless Sony Alpha A7 III",
+      category: "kamera",
+      status: "aktif",
+      pricePerDay: 150000,
+      deposit: 300000,
+      bookedDates: ["2026-11-20", "2026-11-21"],
+      images: ["https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80"],
+      createdAt: "2026-10-15"
+    },
+    {
+      id: 2,
+      title: "Gimbal Smartphone DJI OM 5",
+      category: "elektronik",
+      status: "aktif",
+      pricePerDay: 50000,
+      deposit: 100000,
+      bookedDates: [],
+      images: ["https://images.unsplash.com/photo-1512790182412-b19e6d62bc39?w=800&q=80"],
+      createdAt: "2026-11-01"
+    }
+  ],
+
+  ownerBookings: [
+    {
+      id: "BK-001",
+      itemId: 1,
+      customerName: "Rina",
+      startDate: "17 Nov 2026",
+      endDate: "18 Nov 2026",
+      status: "pending", // pending, approved, completed, cancelled
+      totalAmount: 610000,
+      commission: 61000, // 10%
+      deposit: 300000,
+      requestDate: "2026-11-16"
+    }
+  ],
 
   categories: [
     { id: "kamera", name: "Kamera dan video", iconType: "camera", count: 8, bg: "#0A3F44" },
@@ -882,13 +928,15 @@ window.RentfyData = {
     var p = parseInt(pricePerDay, 10) || 0;
     var sewa = p * d;
     var perlindungan = 10000;
+    var commission = Math.round(sewa * 0.10); // 10% biaya layanan
     return {
       days: d,
       pricePerDay: p,
       sewa: sewa,
       perlindungan: perlindungan,
+      commission: commission,
       deposit: 0,
-      total: sewa + perlindungan
+      total: sewa + perlindungan + commission
     };
   }
 };
