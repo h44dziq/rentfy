@@ -2479,21 +2479,257 @@
   }
 
   // --------------------------------------------------------------------------
-  // OWNER MODE DASHBOARD (Stub for PRD new spec)
+  // OWNER MODE DASHBOARD (PRD baru: kelola listing & booking, frontend demo)
   // --------------------------------------------------------------------------
+  var ownerTab = 'ringkasan';
+  var ownerBookingAction = null;
+
   function renderOwner(container, hash) {
+    var data = window.RentfyData;
+    var owner = data.owner;
+    var listings = data.ownerListings || [];
+    var bookings = data.ownerBookings || [];
+
+    var pendingCount = bookings.filter(function (b) { return b.status === 'pending'; }).length;
+    var activeListings = listings.filter(function (l) { return l.status === 'aktif'; }).length;
+    var activeBookings = bookings.filter(function (b) { return b.status === 'approved'; }).length;
+    var estEarning = bookings
+      .filter(function (b) { return b.status === 'approved' || b.status === 'completed'; })
+      .reduce(function (s, b) { return s + (b.totalAmount - b.commission); }, 0);
+
+    function bookingBadge(status) {
+      var map = {
+        pending: ['badge-amber', 'Menunggu Konfirmasi'],
+        approved: ['badge-teal', 'Disetujui'],
+        completed: ['badge-green', 'Selesai'],
+        cancelled: ['badge-neutral', 'Dibatalkan']
+      };
+      var m = map[status] || map.pending;
+      return `<span class="badge-status ${m[0]}">${m[1]}</span>`;
+    }
+
+    var tabBtns = [
+      ['ringkasan', 'Ringkasan'],
+      ['booking', 'Booking (' + pendingCount + ')'],
+      ['listing', 'Listing'],
+      ['ulasan', 'Ulasan']
+    ].map(function (t) {
+      return `<button class="owner-tab-btn ${ownerTab === t[0] ? 'active' : ''}" data-owner-tab="${t[0]}">${t[1]}</button>`;
+    }).join('');
+
+    var body = '';
+
+    if (ownerTab === 'ringkasan') {
+      body = `
+        <div class="owner-stats-row">
+          <div class="owner-stat-card"><div class="owner-stat-num">${activeListings}</div><div class="owner-stat-label">Listing Aktif</div></div>
+          <div class="owner-stat-card"><div class="owner-stat-num">${activeBookings}</div><div class="owner-stat-label">Booking Berjalan</div></div>
+          <div class="owner-stat-card"><div class="owner-stat-num">${pendingCount}</div><div class="owner-stat-label">Butuh Konfirmasi</div></div>
+          <div class="owner-stat-card"><div class="owner-stat-num">${formatRp(estEarning)}</div><div class="owner-stat-label">Estimasi Pendapatan</div></div>
+        </div>
+        <div style="background: var(--color-teal-light); padding: 14px 16px; border-radius: var(--radius-buttons); font-size: 13px; color: var(--color-forest-stage); margin: 20px 0; display: flex; align-items: center; gap: 10px;">
+          <span class="icon-svg" style="color: var(--color-teal);">${Icons.shield}</span>
+          Komisi platform 10% otomatis dipotong dari pendapatan. Dana dicairkan setelah barang kembali dan masa tunggu komplain selesai.
+        </div>
+        <h3 style="font-size: 18px; margin-bottom: 12px;">Permintaan Booking Terbaru</h3>
+        ${bookings.filter(function (b) { return b.status === 'pending'; }).length === 0
+          ? `<div style="color: var(--color-graphite); font-size: 14px; background:#f8fafc; border:1px solid var(--color-mist); padding:24px; border-radius: var(--radius-cards); text-align:center;">Tidak ada permintaan booking yang menunggu.</div>`
+          : bookings.filter(function (b) { return b.status === 'pending'; }).slice(0, 3).map(function (b) {
+            var item = listings.find(function (l) { return l.id === b.itemId; }) || {};
+            return `<div style="display:flex; align-items:center; gap:14px; border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:14px; margin-bottom:12px; background:#fff;">
+              <div style="width:56px; height:56px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#eee;">
+                <img src="${(item.images && item.images[0]) || ''}" style="width:100%; height:100%; object-fit:cover;" alt="">
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title || 'Barang'}</div>
+                <div style="font-size:12px; color:var(--color-graphite);">${b.customerName} • ${b.startDate} – ${b.endDate}</div>
+                <div style="font-size:13px; margin-top:2px;">${formatRp(b.totalAmount)} ${bookingBadge(b.status)}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <button class="btn btn-amber" style="font-size:12px; padding:6px 12px;" data-owner-approve="${b.id}">Terima</button>
+                <button class="btn btn-ghost" style="font-size:12px; padding:6px 12px;" data-owner-reject="${b.id}">Tolak</button>
+              </div>
+            </div>`;
+          }).join('')}
+        <a href="#/owner" onclick="(function(){var o=document.querySelectorAll('[data-owner-tab]'); if(o.length){o[1].click();}})(); return false;" style="color:var(--color-teal); font-size:13px; font-weight:600; display:inline-block; margin-top:8px;">Lihat semua booking →</a>
+      `;
+    } else if (ownerTab === 'booking') {
+      body = bookings.length === 0
+        ? `<div style="color: var(--color-graphite); text-align:center; padding:40px;">Belum ada booking.</div>`
+        : bookings.map(function (b) {
+            var item = listings.find(function (l) { return l.id === b.itemId; }) || {};
+            return `<div style="border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:16px; margin-bottom:12px; background:#fff;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                <div>
+                  <div style="font-weight:600; font-size:15px;">${item.title || 'Barang'}</div>
+                  <div style="font-size:13px; color:var(--color-graphite); margin-top:2px;">${b.id} • ${b.customerName}</div>
+                  <div style="font-size:13px; color:var(--color-graphite);">${b.startDate} – ${b.endDate}</div>
+                </div>
+                ${bookingBadge(b.status)}
+              </div>
+              <div style="display:flex; gap:8px; font-size:13px; margin-top:10px; flex-wrap:wrap;">
+                <span style="background:#f8fafc; padding:4px 10px; border-radius:8px; border:1px solid var(--color-mist);">Total ${formatRp(b.totalAmount)}</span>
+                <span style="background:#f8fafc; padding:4px 10px; border-radius:8px; border:1px solid var(--color-mist);">Komisi ${formatRp(b.commission)}</span>
+                <span style="background:#f8fafc; padding:4px 10px; border-radius:8px; border:1px solid var(--color-mist);">Deposit ${formatRp(b.deposit)}</span>
+              </div>
+              ${b.status === 'pending' ? `
+              <div style="display:flex; gap:10px; margin-top:14px;">
+                <button class="btn btn-amber" style="flex:1; font-size:13px;" data-owner-approve="${b.id}">Terima Booking</button>
+                <button class="btn btn-outline" style="flex:1; font-size:13px;" data-owner-reject="${b.id}">Tolak</button>
+              </div>` : ''}
+            </div>`;
+          }).join('');
+    } else if (ownerTab === 'listing') {
+      body = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:18px;">Listing Barang Saya</h3>
+          <button class="btn btn-amber" style="font-size:13px;" data-owner-newlisting><span class="icon-svg">${Icons.upload}</span> Pasang Barang</button>
+        </div>
+        ${listings.length === 0 ? `<div style="color:var(--color-graphite); text-align:center; padding:40px;">Belum ada listing.</div>` : listings.map(function (l) {
+          return `<div style="display:flex; gap:14px; border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:14px; margin-bottom:12px; background:#fff;">
+            <div style="width:72px; height:72px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#eee;">
+              <img src="${l.images[0] || ''}" style="width:100%; height:100%; object-fit:cover;" alt="">
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:600; font-size:14px;">${l.title}</div>
+              <div style="font-size:12px; color:var(--color-graphite);">${formatRp(l.pricePerDay)}/hari • Deposit ${formatRp(l.deposit)}</div>
+              <div style="margin-top:4px;"><span class="badge-status ${l.status === 'aktif' ? 'badge-green' : 'badge-neutral'}">${l.status === 'aktif' ? 'Aktif' : l.status}</span></div>
+              <div style="font-size:12px; color:var(--color-graphite); margin-top:4px;">${l.bookedDates.length} tanggal sudah dibooking</div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:12px; align-self:center;" data-owner-doc="${l.id}">Foto Kondisi</button>
+          </div>`;
+        }).join('')}
+      `;
+    } else { // ulasan
+      var reviews = [
+        { name: 'Rina', rating: 5, text: 'Barang persis seperti foto, proses serah terima cepat dan pemilik ramah.', date: '3 hari lalu' },
+        { name: 'Andi', rating: 4, text: 'Baik, komunikatif. Sedikit telat saat pengambilan tapi maklum.', date: '1 minggu lalu' },
+        { name: 'Sari', rating: 5, text: 'Terpercaya. Deposit cair tepat waktu tanpa ribet.', date: '2 minggu lalu' }
+      ];
+      body = `
+        <h3 style="font-size:18px; margin-bottom:12px;">Ulasan yang Diterima</h3>
+        <div style="background:#fff; border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:16px; margin-bottom:16px; display:flex; gap:12px; align-items:center;">
+          <div style="font-size:28px; font-weight:700; color:var(--color-teal);">${owner.rating}</div>
+          <div>
+            <div style="display:flex; gap:2px;">${Array.from({length:5}, function(_,i){ return `<span class="icon-svg" style="${i < Math.round(owner.rating) ? '' : 'opacity:0.25;'}">${Icons.starFilled}</span>`; }).join('')}</div>
+            <div style="font-size:12px; color:var(--color-graphite);">${owner.reviews} ulasan dari penyewa</div>
+          </div>
+        </div>
+        ${reviews.map(function (r) {
+          return `<div style="border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:16px; margin-bottom:12px; background:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-weight:600; font-size:14px;">${r.name}</div>
+              <div style="display:flex; gap:2px;">${Array.from({length:5}, function(_,i){ return `<span class="icon-svg" style="${i < r.rating ? '' : 'opacity:0.25;'}">${Icons.starFilled}</span>`; }).join('')}</div>
+            </div>
+            <div style="font-size:13px; color:var(--color-slate);">"${r.text}"</div>
+            <div style="font-size:11px; color:var(--color-smoke); margin-top:6px;">${r.date}</div>
+          </div>`;
+        }).join('')}
+      `;
+    }
+
     container.innerHTML = `
-      <div class="container" style="max-width: 800px; padding-top: 32px; padding-bottom: 60px;">
-        <h1 style="font-size: 28px; margin-bottom: 20px;">Mode Pemilik</h1>
-        <p style="color: var(--color-graphite); margin-bottom: 24px;">Halaman dashboard pemilik untuk mengelola listing, menerima booking, dan dokumentasi kondisi barang.</p>
-        <div style="background: #f8fafc; border: 1px solid var(--color-mist); border-radius: var(--radius-cards); padding: 24px; text-align: center;">
-          <span class="icon-svg" style="color: var(--color-teal); transform: scale(2); margin-bottom: 16px; display: block;">${Icons.box}</span>
-          <h3 style="font-size: 18px; margin-bottom: 8px;">Fitur Pemilik (Soon)</h3>
-          <p style="color: var(--color-graphite); font-size: 13px; max-width: 500px; margin: 0 auto 16px;">Menurut PRD baru, pemilik dapat membuat listing, mengatur kalender, menerima booking, dan mengunggah foto kondisi barang.</p>
-          <a href="#/" class="btn btn-amber">Kembali ke Beranda</a>
+      <div class="container" style="max-width: 900px; padding-top: 28px; padding-bottom: 60px;">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+          <div style="width:56px; height:56px; border-radius:50%; background:var(--color-teal); color:#fff; font-size:24px; font-weight:700; display:flex; align-items:center; justify-content:center;">${owner.avatar}</div>
+          <div style="flex:1;">
+            <h1 style="font-size:24px; margin-bottom:2px;">Halo, ${owner.name} <span class="badge-status badge-teal" style="margin-left:4px;"><span class="icon-svg">${Icons.badgeCheck}</span> Terverifikasi</span></h1>
+            <div style="font-size:13px; color:var(--color-graphite);">Dashboard Pemilik • ${owner.location}</div>
+          </div>
+          <a href="#/profile" class="btn btn-outline" style="font-size:12px;">Profil</a>
+        </div>
+
+        <div class="owner-tab-bar">${tabBtns}</div>
+        <div style="margin-top:20px;">${body}</div>
+      </div>
+    `;
+
+    // Tabs
+    container.querySelectorAll('[data-owner-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        ownerTab = btn.getAttribute('data-owner-tab');
+        renderOwner(container, hash);
+      });
+    });
+
+    // Booking actions
+    container.querySelectorAll('[data-owner-approve]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var bid = btn.getAttribute('data-owner-approve');
+        var b = data.ownerBookings.find(function (x) { return x.id === bid; });
+        if (b) b.status = 'approved';
+        window.showToast('Booking ' + bid + ' diterima. Penyewa dapat melakukan pembayaran.');
+        renderOwner(container, hash);
+      });
+    });
+    container.querySelectorAll('[data-owner-reject]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var bid = btn.getAttribute('data-owner-reject');
+        var b = data.ownerBookings.find(function (x) { return x.id === bid; });
+        if (b) b.status = 'cancelled';
+        window.showToast('Booking ' + bid + ' ditolak.');
+        renderOwner(container, hash);
+      });
+    });
+
+    // New listing
+    var newListingBtn = container.querySelector('[data-owner-newlisting]');
+    if (newListingBtn) newListingBtn.addEventListener('click', function () {
+      window.showToast('Form pasang barang belum tersedia di demo, tapi alur pemilik sudah tampil.');
+    });
+
+    // Photo doc modal
+    container.querySelectorAll('[data-owner-doc]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var lid = btn.getAttribute('data-owner-doc');
+        openOwnerDocModal(lid);
+      });
+    });
+  }
+
+  function openOwnerDocModal(listingId) {
+    var modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.innerHTML = `
+      <div class="modal-card" style="max-width: 480px;">
+        <div class="modal-header-row">
+          <h3 style="font-size: 18px;">Foto Kondisi Sebelum Sewa</h3>
+          <button class="btn-ghost" id="owner-doc-close" style="font-size:18px; font-weight:bold;">✕</button>
+        </div>
+        <div class="modal-content-area">
+          <p style="font-size:13px; color:var(--color-graphite); margin-bottom:16px;">Unggah foto/video kondisi barang berstempel waktu sebagai bukti sebelum disewa (PRD US-07).</p>
+          <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:10px;">
+            <div class="photo-slot-clean" data-owner-photo="depan"><span class="icon-svg">${Icons.camera}</span><span>Depan</span></div>
+            <div class="photo-slot-clean" data-owner-photo="belakang"><span class="icon-svg">${Icons.camera}</span><span>Belakang</span></div>
+            <div class="photo-slot-clean" data-owner-photo="aksesori"><span class="icon-svg">${Icons.camera}</span><span>Aksesori</span></div>
+            <div class="photo-slot-clean" data-owner-photo="seri"><span class="icon-svg">${Icons.camera}</span><span>No. Seri</span></div>
+          </div>
+        </div>
+        <div class="modal-footer-row">
+          <button class="btn btn-ghost" id="owner-doc-skip">Nanti Saja</button>
+          <button class="btn btn-amber" id="owner-doc-save">Simpan Bukti</button>
         </div>
       </div>
     `;
+    document.body.appendChild(modal);
+    var photos = {};
+    modal.querySelectorAll('[data-owner-photo]').forEach(function (slot) {
+      slot.addEventListener('click', function () {
+        if (!slot.classList.contains('photo-slot-filled')) {
+          var pid = slot.getAttribute('data-owner-photo');
+          photos[pid] = true;
+          slot.classList.add('photo-slot-filled');
+          slot.innerHTML = `<span class="icon-svg">${Icons.check}</span><span>${slot.textContent.trim()}</span>`;
+          window.showToast('Foto tersimpan (stempel waktu: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ')');
+        }
+      });
+    });
+    document.getElementById('owner-doc-close').addEventListener('click', function () { modal.remove(); });
+    document.getElementById('owner-doc-skip').addEventListener('click', function () { modal.remove(); });
+    document.getElementById('owner-doc-save').addEventListener('click', function () {
+      window.showToast('Dokumentasi kondisi barang tersimpan sebagai bukti bersama.');
+      modal.remove();
+    });
   }
 
   // --------------------------------------------------------------------------
