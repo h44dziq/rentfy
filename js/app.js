@@ -38,6 +38,7 @@
     logout: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>',
     upload: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>',
     badgeCheck: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#0F5C63" stroke="#ffffff" stroke-width="2"><path d="M12 2l2.4 2.8 3.7-.4 1.3 3.5 3.3 1.8-1 3.6 1.8 3.3-3.1 2.1-.4 3.7-3.7 1-2 3.2-3.2-2-3.7.4-1.3-3.5-3.3-1.8 1-3.6-1.8-3.3 3.1-2.1.4-3.7 3.7-1 2-3.2z"></path><polyline points="9 12 11 14 15 10" stroke="#ffffff" fill="none"></polyline></svg>',
+    users: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
     idCard: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>'
   };
 
@@ -48,7 +49,7 @@
     isLoggedIn: false,
     selectedLocation: 'Jakarta Selatan',
     selectedDates: { start: '17 Nov', end: '18 Nov', days: 2 },
-    searchQuery: 'camera',
+    searchQuery: '',
     activeCategory: null,
     activeSort: 'terdekat',
     activeView: 'daftar',
@@ -60,9 +61,9 @@
     verifyStep: 1,
 
     messages: [
-      { sender: 'Dimas', text: 'Halo LeBron! Ada yang bisa saya bantu terkait unit kameranya?', time: '10:15' },
-      { sender: 'LeBron James', text: 'Halo Mas Dimas, mau tanya apakah paketnya sudah termasuk tas dan memory card?', time: '10:17' },
-      { sender: 'Dimas', text: 'Sudah lengkap LeBron, siap pakai langsung untuk kebutuhan dokumentasi.', time: '10:18' }
+      { sender: 'Dimas', text: 'Halo Arvin! Ada yang bisa saya bantu terkait unit kameranya?', time: '10:15' },
+      { sender: 'Arvin Maulana', text: 'Halo Mas Dimas, mau tanya apakah paketnya sudah termasuk tas dan memory card?', time: '10:17' },
+      { sender: 'Dimas', text: 'Sudah lengkap Arvin, siap pakai langsung untuk kebutuhan dokumentasi.', time: '10:18' }
     ]
   };
 
@@ -114,28 +115,25 @@
 
     var app = document.getElementById('app');
     var nav = document.getElementById('top-nav');
-    var subnav = document.getElementById('category-subnav');
     var footer = document.getElementById('site-footer');
 
     if (hash === '#/login') {
       nav.style.display = 'none';
-      if (subnav) subnav.style.display = 'none';
       footer.style.display = 'none';
       renderLogin(app);
     } else if (hash === '#/register') {
       nav.style.display = 'none';
-      if (subnav) subnav.style.display = 'none';
       footer.style.display = 'none';
       renderRegister(app);
     } else {
       nav.style.display = 'block';
-      var trending = document.getElementById('trending-strip');
+      var navAvatar = document.getElementById('nav-avatar');
+      if (navAvatar && window.RentfyData && window.RentfyData.user) {
+        navAvatar.textContent = window.RentfyData.user.avatar;
+        navAvatar.title = 'Profil ' + window.RentfyData.user.name;
+      }
       var isHome = (hash === '#/' || hash === '#/home');
       var isSearch = (hash.indexOf('#/search') === 0);
-
-      // Trending tag bar: visible on home and search
-      if (trending) trending.style.display = (isHome || isSearch) ? 'block' : 'none';
-      if (subnav) subnav.style.display = (isHome || isSearch) ? 'block' : 'none';
 
       // Navbar search bar:
       // Di Beranda & Kategori: searchbar di navbar disembunyikan saat di posisi atas
@@ -249,7 +247,7 @@
           <form id="login-form">
             <div style="margin-bottom: 18px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Alamat Email</label>
-              <input type="email" id="login-email" class="input-field" placeholder="nama@email.com" value="lebron@email.com">
+              <input type="email" id="login-email" class="input-field" placeholder="nama@email.com" value="arvin@email.com">
             </div>
             <div style="margin-bottom: 24px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Kata Sandi</label>
@@ -273,7 +271,7 @@
       e.preventDefault();
       window.AppState.isLoggedIn = true;
       window.location.hash = '#/';
-      window.showToast('Selamat datang kembali, LeBron James');
+      window.showToast('Selamat datang kembali, Arvin Maulana');
     });
   }
 
@@ -292,11 +290,11 @@
           <form id="reg-form">
             <div style="margin-bottom: 16px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Nama Lengkap</label>
-              <input type="text" class="input-field" value="LeBron James">
+              <input type="text" class="input-field" value="Arvin Maulana">
             </div>
             <div style="margin-bottom: 16px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Email</label>
-              <input type="email" class="input-field" value="lebron@email.com">
+              <input type="email" class="input-field" value="arvin@email.com">
             </div>
             <div style="margin-bottom: 16px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Nomor HP / WhatsApp</label>
@@ -345,7 +343,9 @@
     var categories = window.RentfyData.categories;
 
     var nearbyItems = items.slice().sort(function (a, b) { return a.distanceKm - b.distanceKm; }).slice(0, 4);
-    var popularItems = items.slice().sort(function (a, b) { return b.rating - a.rating; }).slice(0, 4);
+    var popularItems = items.slice().sort(function (a, b) {
+      return (getRentedCount(b) - getRentedCount(a)) || (b.rating - a.rating);
+    }).slice(0, 4);
 
     container.innerHTML = `
       <div class="container" style="padding-top: 36px;">
@@ -396,10 +396,10 @@
           </a>
         </div>
 
-        <!-- Section: Service Category Cards (Dark Forest Stage) -->
+        <!-- Section: Service Category Cards -->
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
           <div>
-            <h2 style="font-size: 22px;">Kategori Pilihan</h2>
+            <h2 style="font-size: 22px;">Kategori</h2>
             <p style="font-size: 13px; color: var(--color-graphite); margin-top: 2px;">Sewa kebutuhan harian, hobi, dan pekerjaan dari pemilik terpercaya</p>
           </div>
         </div>
@@ -409,8 +409,9 @@
             var iconHtml = Icons[c.iconType] || Icons.camera;
             return `
               <div class="service-category-card" data-cat="${c.id}">
-                <div class="cat-title">${c.name}</div>
                 <div class="cat-icon icon-svg">${iconHtml}</div>
+                <div class="cat-title">${c.name}</div>
+                <div class="cat-count">${c.count} barang</div>
               </div>
             `;
           }).join('')}
@@ -422,7 +423,7 @@
             <h2 style="font-size: 22px;">Dekat kamu (${window.AppState.selectedLocation})</h2>
             <p style="font-size: 13px; color: var(--color-graphite); margin-top: 2px;">Urutan barang terdekat untuk kemudahan pengambilan fisik</p>
           </div>
-          <a href="#/search" class="pill-tag" style="padding: 6px 14px; font-size: 13px;">
+          <a href="#/search" class="pill-tag" id="see-all-nearby" style="padding: 6px 14px; font-size: 13px;">
             Lihat Semua ${Icons.arrowRight}
           </a>
         </div>
@@ -431,44 +432,19 @@
           ${nearbyItems.map(renderMarketplaceCard).join('')}
         </div>
 
-        <!-- Feature Benefit Row (Referensi.md) -->
-        <div class="benefit-row">
-          <div class="benefit-item">
-            <span class="icon-svg">${Icons.shield}</span>
-            <div>
-              <h4>Transaksi Terproteksi</h4>
-              <p>Dana sewa ditahan aman oleh Rentfy sampai barang diterima dalam kondisi baik.</p>
-            </div>
-          </div>
-          <div class="benefit-item">
-            <span class="icon-svg">${Icons.pin}</span>
-            <div>
-              <h4>Lokasi Terverifikasi</h4>
-              <p>Titik serah terima dan profil pemilik telah terverifikasi secara akurat.</p>
-            </div>
-          </div>
-          <div class="benefit-item">
-            <span class="icon-svg">${Icons.box}</span>
-            <div>
-              <h4>Jaminan Deposit Cair</h4>
-              <p>Deposit penjamin otomatis dikembalikan 100% setelah barang selesai dicek.</p>
-            </div>
-          </div>
-        </div>
-
         <!-- Section: Paling sering disewa -->
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
           <div>
             <h2 style="font-size: 22px;">Paling sering disewa</h2>
             <p style="font-size: 13px; color: var(--color-graphite); margin-top: 2px;">Pilihan terpopuler dengan rating kepuasan tertinggi</p>
           </div>
-          <a href="#/search" class="pill-tag" style="padding: 6px 14px; font-size: 13px;">
+          <a href="#/search" class="pill-tag" id="see-all-popular" style="padding: 6px 14px; font-size: 13px;">
             Lihat Semua ${Icons.arrowRight}
           </a>
         </div>
 
         <div class="items-grid-4">
-          ${popularItems.map(renderMarketplaceCard).join('')}
+          ${popularItems.map(function (it) { return renderMarketplaceCard(it, { showRentedCount: true }); }).join('')}
         </div>
       </div>
     `;
@@ -484,16 +460,30 @@
 
     function doHomeSearch() {
       var query = document.getElementById('home-search-input').value.trim();
-      window.AppState.searchQuery = query || 'camera';
+      window.AppState.searchQuery = query;
+      window.AppState.activeCategory = null;
+      var targetHash = query ? '#/search?q=' + encodeURIComponent(query) : '#/search';
       if (!window.AppState.hasShownLocationModal) {
         window.AppState.hasShownLocationModal = true;
         openLocationModal(function () {
-          window.location.hash = '#/search?q=' + encodeURIComponent(window.AppState.searchQuery);
+          window.location.hash = targetHash;
         });
       } else {
-        window.location.hash = '#/search?q=' + encodeURIComponent(window.AppState.searchQuery);
+        window.location.hash = targetHash;
       }
     }
+
+    document.getElementById('see-all-nearby').addEventListener('click', function () {
+      window.AppState.activeSort = 'terdekat';
+      window.AppState.searchQuery = '';
+      window.AppState.activeCategory = null;
+    });
+
+    document.getElementById('see-all-popular').addEventListener('click', function () {
+      window.AppState.activeSort = 'rating';
+      window.AppState.searchQuery = '';
+      window.AppState.activeCategory = null;
+    });
 
     document.getElementById('home-search-action').addEventListener('click', doHomeSearch);
     document.getElementById('home-search-input').addEventListener('keypress', function (e) {
@@ -513,8 +503,15 @@
   // --------------------------------------------------------------------------
   // ITEM CARD COMPONENT (Referensi.md 16px radius, soft shadow, badge)
   // --------------------------------------------------------------------------
-  function renderMarketplaceCard(item) {
+  function getRentedCount(item) {
+    if (typeof item.rentedCount === 'number') return item.rentedCount;
+    return Math.round((item.reviewsCount || 0) * 1.3 + 5);
+  }
+
+  function renderMarketplaceCard(item, opts) {
     var isSaved = window.AppState.savedItems.has(item.id);
+    var showRented = opts && typeof opts === 'object' && opts.showRentedCount;
+    var rentedCount = getRentedCount(item);
     return `
       <div class="marketplace-card" data-id="${item.id}">
         <div class="card-media">
@@ -530,13 +527,16 @@
             <span>•</span>
             <span class="meta-chip"><span class="icon-svg">${Icons.star}</span> ${item.rating}</span>
           </div>
+          ${showRented ? `
+            <div class="card-rented-badge">
+              <span class="icon-svg">${Icons.users}</span>
+              <span><strong>${rentedCount}</strong> orang sudah menyewa</span>
+            </div>
+          ` : ''}
           <div class="card-item-footer">
             <div class="item-price-rate">
               ${formatRp(item.pricePerDay)} <span>/ hari</span>
             </div>
-            <span class="badge-status badge-teal">
-              <span class="icon-svg">${Icons.check}</span> Terverifikasi
-            </span>
           </div>
         </div>
       </div>
@@ -878,8 +878,10 @@
   // --------------------------------------------------------------------------
   function renderSearch(container, hash) {
     var params = new URLSearchParams(hash.split('?')[1] || '');
-    var query = params.get('q') || window.AppState.searchQuery || '';
-    var catParam = params.get('cat') || window.AppState.activeCategory;
+    var query = (params.get('q') || '').trim();
+    var catParam = params.get('cat') || null;
+    window.AppState.searchQuery = query;
+    window.AppState.activeCategory = catParam;
 
     var items = window.RentfyData.items.slice();
 
@@ -902,13 +904,19 @@
       items.sort(function (a, b) { return a.distanceKm - b.distanceKm; });
     }
 
-    var title = catParam 
-      ? 'Kategori: ' + (window.RentfyData.categories.find(function (c) { return c.id === catParam; }) || {}).name
-      : 'Hasil untuk "' + (query || 'Semua barang') + '"';
+    var title = catParam
+      ? 'Kategori: ' + ((window.RentfyData.categories.find(function (c) { return c.id === catParam; }) || {}).name || catParam)
+      : (query ? 'Hasil untuk "' + query + '"' : 'Semua Barang Tersedia');
 
     container.innerHTML = `
       <div style="background: #ffffff; border-bottom: 1px solid var(--color-mist); padding: 24px 0 16px; margin-bottom: 24px;">
         <div class="container">
+          <div style="margin-bottom: 14px;">
+            <a href="#/" class="btn btn-outline" style="padding: 8px 14px; font-size: 13px;">
+              <span class="icon-svg">${Icons.arrowLeft}</span> Kembali ke Beranda
+            </a>
+          </div>
+
           <!-- In-Page Search Bar for Category Screen (L5) -->
           <div class="hero-search-container" style="margin-bottom: 16px;">
             <div class="search-slot slot-text">
@@ -1036,7 +1044,7 @@
 
     function doCategorySearch() {
       var val = document.getElementById('search-input-field').value.trim();
-      window.location.hash = '#/search?q=' + encodeURIComponent(val);
+      window.location.hash = val ? '#/search?q=' + encodeURIComponent(val) : '#/search';
     }
     document.getElementById('search-action-btn').addEventListener('click', doCategorySearch);
     document.getElementById('search-input-field').addEventListener('keypress', function (e) {
@@ -1103,8 +1111,6 @@
                 <span class="meta-chip"><span class="icon-svg">${Icons.pin}</span> ${item.locationName} (${item.distance})</span>
                 <span>•</span>
                 <span class="meta-chip"><span class="icon-svg">${Icons.star}</span> ${item.rating} (${item.reviewsCount} ulasan)</span>
-                <span>•</span>
-                <span class="badge-status badge-teal"><span class="icon-svg">${Icons.check}</span> Terverifikasi</span>
               </div>
             </div>
 
@@ -1114,7 +1120,7 @@
                 <div class="owner-avatar-circle">${owner.avatar}</div>
                 <div>
                   <div style="font-weight: 700; font-size: 15px;">
-                    ${owner.name} <span class="badge-status badge-teal" style="font-size: 11px;">Pemilik Terverifikasi</span>
+                    ${owner.name}
                   </div>
                   <div style="font-size: 13px; color: var(--color-smoke); margin-top: 2px;">
                     ${owner.responseTime} • ⭐ ${owner.rating} (${owner.reviews} transaksi)
@@ -1470,7 +1476,12 @@
     var activeTab = (status === 'selesai') ? 'selesai' : 'berjalan';
 
     container.innerHTML = `
-      <div class="container" style="padding: 32px 0 60px;">
+      <div class="container" style="padding-top: 32px; padding-bottom: 60px;">
+        <div style="margin-bottom: 16px;">
+          <a href="#/" class="btn btn-outline" style="padding: 8px 14px; font-size: 13px;">
+            <span class="icon-svg">${Icons.arrowLeft}</span> Kembali ke Menu Utama
+          </a>
+        </div>
         <h1 style="font-size: 28px; margin-bottom: 24px;">Pesanan Saya</h1>
 
         <div style="display: flex; gap: 12px; border-bottom: 1px solid var(--color-mist); margin-bottom: 24px;">
@@ -1566,7 +1577,7 @@
     var order = window.AppState.currentOrder;
 
     container.innerHTML = `
-      <div class="container" style="max-width: 760px; padding: 24px 0 60px;">
+      <div class="container" style="max-width: 760px; padding-top: 24px; padding-bottom: 60px;">
         <div style="background: #ffffff; border: 1px solid var(--color-mist); border-radius: var(--radius-cards); box-shadow: var(--shadow-md); overflow: hidden; display: flex; flex-direction: column; height: 70vh;">
           
           <!-- Header -->
@@ -1575,7 +1586,7 @@
               <a href="#/orders" style="font-size: 16px; color: var(--color-slate);">${Icons.arrowLeft}</a>
               <div class="owner-avatar-circle" style="width: 38px; height: 38px; font-size: 14px;">${owner.avatar}</div>
               <div>
-                <div style="font-weight: 700; font-size: 14px;">${owner.name} <span class="badge-status badge-teal" style="font-size: 10px;">Terverifikasi</span></div>
+                <div style="font-weight: 700; font-size: 14px;">${owner.name}</div>
                 <div style="font-size: 12px; color: var(--color-smoke);">${owner.responseTime}</div>
               </div>
             </div>
@@ -1604,7 +1615,7 @@
             </div>
 
             ${window.AppState.messages.map(function (m) {
-              var isMe = m.sender === 'LeBron James' || m.sender === 'LeBron';
+              var isMe = m.sender === 'Arvin Maulana' || m.sender === 'Arvin';
               return `
                 <div style="display: flex; justify-content: ${isMe ? 'flex-end' : 'flex-start'};">
                   <div style="max-width: 70%; background: ${isMe ? 'var(--color-teal)' : '#ffffff'}; color: ${isMe ? '#ffffff' : 'var(--color-carbon)'}; padding: 10px 16px; border-radius: var(--radius-inputs); box-shadow: var(--shadow-sm); font-size: 14px;">
@@ -1640,13 +1651,13 @@
 
     function sendMsg(text) {
       if (!text) return;
-      window.AppState.messages.push({ sender: 'LeBron James', text: text, time: 'Sekarang' });
+      window.AppState.messages.push({ sender: 'Arvin Maulana', text: text, time: 'Sekarang' });
       renderChat(container);
 
       setTimeout(function () {
         window.AppState.messages.push({
           sender: 'Dimas',
-          text: 'Siap LeBron! Nanti kabari saja kalau sudah dekat titik serah terima ya.',
+          text: 'Siap Arvin! Nanti kabari saja kalau sudah dekat titik serah terima ya.',
           time: 'Sekarang'
         });
         renderChat(container);
@@ -1693,7 +1704,7 @@
     var currentWeight = statusWeights[status] || 1;
 
     container.innerHTML = `
-      <div class="container" style="max-width: 760px; padding: 32px 0 60px;">
+      <div class="container" style="max-width: 760px; padding-top: 32px; padding-bottom: 60px;">
         <div style="margin-bottom: 20px;">
           <a href="#/orders" style="font-size: 14px; color: var(--color-graphite); display: inline-flex; align-items: center; gap: 6px;">
             <span class="icon-svg">${Icons.arrowLeft}</span> Kembali ke Pesanan
@@ -1811,7 +1822,7 @@
           <div style="background: #f8fafc; padding: 20px; border-radius: var(--radius-inputs); border: 1px solid var(--color-mist); margin-bottom: 24px;">
             <h4 style="font-size: 15px; margin-bottom: 8px;">Tinjau Data Identitas</h4>
             <div style="font-size: 13px; color: var(--color-slate); line-height: 1.8;">
-              <div>Nama: <strong>LeBron James</strong></div>
+              <div>Nama: <strong>Arvin Maulana</strong></div>
               <div>NIK: <strong>3174**********01</strong></div>
               <div>Status: <span class="badge-status badge-green"><span class="icon-svg">${Icons.check}</span> Dokumen Valid</span></div>
             </div>
@@ -2214,7 +2225,7 @@
     var user = window.RentfyData.user;
 
     container.innerHTML = `
-      <div class="container" style="max-width: 640px; padding: 32px 0 60px;">
+      <div class="container" style="max-width: 640px; padding-top: 32px; padding-bottom: 60px;">
         <h1 style="font-size: 28px; margin-bottom: 24px;">Profil Saya</h1>
 
         <div style="background: #ffffff; border: 1px solid var(--color-mist); border-radius: var(--radius-cards); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 24px; display: flex; align-items: center; gap: 20px;">
@@ -2224,7 +2235,6 @@
           <div style="flex: 1;">
             <h3 style="font-size: 18px; margin-bottom: 2px;">${user.name}</h3>
             <div style="font-size: 13px; color: var(--color-graphite);">${user.email} • ${user.location}</div>
-            <div style="font-size: 12px; color: var(--color-smoke); margin-top: 4px;">Penyewa Terverifikasi</div>
           </div>
           <button class="btn btn-outline" style="font-size: 12px;" onclick="demoToast()">Ubah</button>
         </div>
@@ -2268,7 +2278,7 @@
     var steps = window.RentfyData.howItWorks;
 
     container.innerHTML = `
-      <div class="container" style="max-width: 760px; padding: 40px 0 60px;">
+      <div class="container" style="max-width: 760px; padding-top: 40px; padding-bottom: 60px;">
         <h1 style="font-size: 32px; text-align: center; margin-bottom: 8px;">Cara Kerja Rentfy</h1>
         <p style="text-align: center; color: var(--color-graphite); font-size: 15px; margin-bottom: 40px;">
           Platform peer-to-peer terpercaya untuk menyewa dan menyewakan barang dengan mudah dan aman.
@@ -2399,7 +2409,7 @@
       if (!navInput) return;
       var q = navInput.value.trim();
       window.AppState.searchQuery = q;
-      window.location.hash = '#/search?q=' + encodeURIComponent(q);
+      window.location.hash = q ? '#/search?q=' + encodeURIComponent(q) : '#/search';
     }
 
     if (navInput) {

@@ -273,6 +273,8 @@ input, select, textarea {
 }
 .nav-inner {
   height: 100%;
+  max-width: 100%;
+  padding: 0 clamp(20px, 3vw, 48px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -402,83 +404,6 @@ input, select, textarea {
   cursor: pointer;
 }
 
-/* Trending Tag Bar (Populer:) */
-.trending-strip {
-  background-color: var(--color-paper);
-  border-bottom: 1px solid var(--color-fog);
-  padding: 8px 0;
-  font-size: 13px;
-}
-.trending-inner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
-}
-.trending-inner::-webkit-scrollbar {
-  display: none;
-}
-.trending-label {
-  font-weight: 600;
-  color: var(--color-slate);
-}
-.trending-link {
-  color: var(--color-graphite);
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-.trending-link:hover {
-  color: var(--color-teal);
-}
-.trending-sep {
-  color: var(--color-smoke);
-  font-size: 10px;
-}
-
-/* Category Sub-Navigation Strip (Spacious, Clean E-Commerce Header) */
-.category-subnav {
-  background-color: var(--color-paper);
-  border-bottom: 1px solid var(--color-mist);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-}
-.subnav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-.subnav-inner::-webkit-scrollbar {
-  display: none;
-}
-.subnav-item {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-graphite);
-  white-space: nowrap;
-  padding: 6px 2px;
-  position: relative;
-  transition: color 0.2s;
-}
-.subnav-item:hover {
-  color: var(--color-teal);
-  font-weight: 600;
-}
-.subnav-item:hover::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: var(--color-teal);
-}
-
 /* --------------------------------------------------------------------------
    HERO SEARCH BAR (Hygglo & Referensi.md Component)
    White fill, #dadbdd border, clean segments, square dark/teal docked search button
@@ -587,44 +512,62 @@ input, select, textarea {
 }
 
 /* --------------------------------------------------------------------------
-   SERVICE CATEGORY CARD (Dark Forest Stage #0A3F44)
-   Referensi.md: #003912/0A3F44 background, 16px radius, 25px top padding
-   White Macan/Poppins 600 title top-left, soft shadow
+   SERVICE CATEGORY CARDS (Clean Icon-Badge Tiles)
    -------------------------------------------------------------------------- */
 .category-cards-carousel {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 16px;
+  gap: 14px;
   margin-bottom: var(--section-gap);
-  overflow-x: auto;
-  padding-bottom: 8px;
+  padding-bottom: 4px;
 }
 .service-category-card {
-  background-color: var(--color-forest-stage);
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-mist);
   border-radius: var(--radius-cards);
-  padding: 24px 16px 16px;
-  box-shadow: var(--shadow-md);
-  color: #ffffff;
+  padding: 18px 10px;
+  box-shadow: var(--shadow-sm);
+  color: var(--color-carbon);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 128px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
 }
 .service-category-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-hover);
-}
-.service-category-card .cat-title {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.3;
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-teal);
+  background-color: #f8fcfc;
 }
 .service-category-card .cat-icon {
-  align-self: flex-end;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-teal-light);
+  color: var(--color-teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+.service-category-card:hover .cat-icon {
+  background-color: var(--color-teal);
   color: #ffffff;
-  opacity: 0.9;
+}
+.service-category-card .cat-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-carbon);
+}
+.service-category-card .cat-count {
+  font-size: 11px;
+  color: var(--color-smoke);
+  margin-top: -6px;
 }
 
 /* --------------------------------------------------------------------------
@@ -719,6 +662,18 @@ input, select, textarea {
   align-items: center;
   gap: 4px;
 }
+.card-rented-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 12px;
+  color: var(--color-teal);
+  background-color: var(--color-teal-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-pills);
+  margin-bottom: 12px;
+}
 .card-item-footer {
   margin-top: auto;
   padding-top: 12px;
@@ -763,34 +718,6 @@ input, select, textarea {
   color: var(--color-mist);
   font-size: 14px;
   max-width: 540px;
-}
-
-/* Feature Benefit Row Item (Referensi.md) */
-.benefit-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: var(--section-gap);
-}
-.benefit-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-}
-.benefit-item .icon-svg {
-  color: var(--color-teal);
-  padding: 10px;
-  background: var(--color-teal-light);
-  border-radius: var(--radius-buttons);
-}
-.benefit-item h4 {
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-.benefit-item p {
-  font-size: 13px;
-  color: var(--color-graphite);
 }
 
 /* --------------------------------------------------------------------------
@@ -1301,9 +1228,6 @@ input, select, textarea {
   .footer-cols {
     grid-template-columns: 1fr 1fr;
   }
-  .benefit-row {
-    grid-template-columns: 1fr;
-  }
   .nav-inner {
     gap: 16px;
   }
@@ -1322,6 +1246,7 @@ input, select, textarea {
   }
   .nav-inner {
     gap: 10px;
+    padding: 0 16px;
   }
   .brand-logo-img {
     height: 28px;
@@ -1353,22 +1278,6 @@ input, select, textarea {
   }
   .nav-actions {
     gap: 8px;
-  }
-
-  /* Trending & Category Sub-Nav */
-  .trending-strip {
-    padding: 6px 0;
-    font-size: 12px;
-  }
-  .trending-inner {
-    gap: 10px;
-  }
-  .subnav-inner {
-    gap: 14px;
-    justify-content: flex-start;
-  }
-  .subnav-item {
-    font-size: 13px;
   }
 
   /* Hero Search Bar -> vertical stack */
@@ -1411,8 +1320,12 @@ input, select, textarea {
     gap: 10px;
   }
   .service-category-card {
-    min-height: 100px;
-    padding: 16px 12px 12px;
+    padding: 14px 10px;
+    gap: 8px;
+  }
+  .service-category-card .cat-icon {
+    width: 40px;
+    height: 40px;
   }
   .service-category-card .cat-title {
     font-size: 13px;
@@ -1451,22 +1364,6 @@ input, select, textarea {
   }
   .promo-stage-banner p {
     font-size: 13px;
-  }
-
-  /* Benefit Row */
-  .benefit-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .benefit-item {
-    padding: 12px;
-    gap: 12px;
-  }
-  .benefit-item h4 {
-    font-size: 14px;
-  }
-  .benefit-item p {
-    font-size: 12px;
   }
 
   /* Item Detail Page */
@@ -1647,33 +1544,6 @@ input, select, textarea {
   }
   [style*="padding: 40px 20px"] {
     padding: 24px 16px !important;
-  }
-
-  /* Category subnav horizontal scroll on mobile */
-  .category-subnav {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .subnav-inner {
-    white-space: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-  }
-  .subnav-item {
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  /* Trending strip horizontal scroll */
-  .trending-inner {
-    white-space: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .trending-link, .trending-label, .trending-sep {
-    white-space: nowrap;
-    flex-shrink: 0;
   }
 
   /* Chat page height fix */
