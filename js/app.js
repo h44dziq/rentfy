@@ -59,6 +59,7 @@
     currentOrder: null,
     orderStatus: 'menunggu',
     verifyStep: 1,
+    verifyNext: null,
 
     messages: [
       { sender: 'Dimas', text: 'Halo Arvin! Ada yang bisa saya bantu terkait unit kameranya?', time: '10:15' },
@@ -209,6 +210,13 @@
       } else if (hash === '#/how-it-works') {
         footer.style.display = 'block';
         renderHowItWorks(app);
+      } else if (hash === '#/complain') {
+        footer.style.display = 'none';
+        renderComplain(app);
+      } else if (hash.indexOf('#/owner') === 0) {
+        console.log('Owner route detected:', hash);
+        footer.style.display = 'block';
+        renderOwner(app, hash);
       } else {
         renderHome(app);
       }
@@ -246,13 +254,20 @@
 
           <form id="login-form">
             <div style="margin-bottom: 18px;">
-              <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Alamat Email</label>
-              <input type="email" id="login-email" class="input-field" placeholder="nama@email.com" value="arvin@email.com">
+              <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Username</label>
+              <input type="text" id="login-username" class="input-field" placeholder="Masukkan username" value="arvin" autocomplete="username">
+              <div style="font-size: 11px; color: var(--color-smoke); margin-top: 4px;">Demo: username <strong>pemilik</strong> = mode pemilik, selain itu = penyewa.</div>
             </div>
             <div style="margin-bottom: 24px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Kata Sandi</label>
               <input type="password" id="login-pwd" class="input-field" placeholder="••••••••" value="password123">
             </div>
+
+            <!-- Hidden role select: tetap menyimpan opsi pemilik & penyewa, tidak ditampilkan -->
+            <select id="login-role" style="display: none;">
+              <option value="penyewa">Penyewa</option>
+              <option value="pemilik">Pemilik</option>
+            </select>
 
             <!-- Single Amber CTA per Screen -->
             <button type="submit" class="btn btn-amber btn-block">
@@ -269,9 +284,21 @@
 
     document.getElementById('login-form').addEventListener('submit', function (e) {
       e.preventDefault();
+      var username = document.getElementById('login-username') ? document.getElementById('login-username').value.trim() : '';
+      // Deteksi role dari username: "pemilik"/"owner" => pemilik, selain itu penyewa
+      var role = (/pemilik|owner/i).test(username) ? 'pemilik' : 'penyewa';
+      // Sinkronkan ke hidden select agar nilai role tetap tersimpan
+      var roleSel = document.getElementById('login-role');
+      if (roleSel) roleSel.value = role;
       window.AppState.isLoggedIn = true;
-      window.location.hash = '#/';
-      window.showToast('Selamat datang kembali, Arvin Maulana');
+      window.RentfyData.user.role = role;
+      if (role === 'pemilik') {
+        window.location.hash = '#/owner';
+        window.showToast('Selamat datang, mode pemilik aktif');
+      } else {
+        window.location.hash = '#/';
+        window.showToast('Selamat datang kembali, ' + (window.RentfyData.user.name || 'Rina'));
+      }
     });
   }
 
@@ -1336,7 +1363,9 @@
         orderId: 'RF-' + Math.floor(100000 + Math.random() * 900000),
         createdAt: 'Hari ini'
       };
-      window.location.hash = '#/checkout';
+      // PRD baru: verifikasi KTP langsung muncul saat "Ajukan Sewa"
+      window.AppState.verifyNext = '#/checkout';
+      window.location.hash = '#/verify';
     });
 
     bindCardEvents(container);
@@ -1353,7 +1382,7 @@
     }
 
     var item = order.item;
-    var totalCost = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var totalCost = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     container.innerHTML = `
       <div class="step-card-centered">
@@ -1390,6 +1419,10 @@
           <div class="cost-row">
             <span>Biaya Perlindungan Barang</span>
             <span>${formatRp(order.pricing.perlindungan)}</span>
+          </div>
+          <div class="cost-row">
+            <span>Biaya layanan Rentfy (10%)</span>
+            <span>${formatRp(order.pricing.commission)}</span>
           </div>
           <div class="cost-row">
             <span>Deposit Jaminan (dikembalikan)</span>
@@ -1537,7 +1570,7 @@
     };
 
     var s = statusLabels[status] || statusLabels.menunggu;
-    var total = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var total = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     return `
       <div style="background: var(--color-paper); border: 1px solid var(--color-mist); border-radius: var(--radius-cards); padding: 24px; box-shadow: var(--shadow-sm); max-width: 760px;">
@@ -1690,7 +1723,7 @@
     }
 
     var status = window.AppState.orderStatus;
-    var total = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var total = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     var steps = [
       { id: 'menunggu', title: 'Permintaan Terkirim', desc: 'Menunggu persetujuan pemilik barang' },
@@ -1846,10 +1879,12 @@
         window.AppState.verifyStep++;
         renderVerify(container);
       } else {
-        window.showToast('Identitas terverifikasi berhasil. Menuju pembayaran...');
+        window.showToast('Identitas terverifikasi berhasil.');
+        var next = window.AppState.verifyNext || '#/payment';
+        window.AppState.verifyNext = null;
         setTimeout(function () {
-          window.location.hash = '#/payment';
-        }, 1000);
+          window.location.hash = next;
+        }, 800);
       }
     });
   }
@@ -1864,7 +1899,7 @@
       return;
     }
 
-    var total = order.pricing.sewa + order.pricing.perlindungan + order.deposit;
+    var total = order.pricing.sewa + order.pricing.perlindungan + order.pricing.commission + order.deposit;
 
     container.innerHTML = `
       <div class="step-card-centered">
@@ -1878,6 +1913,36 @@
         <div style="background: #f8fafc; padding: 18px; border-radius: var(--radius-inputs); margin-bottom: 24px;">
           <div style="font-size: 13px; color: var(--color-smoke); margin-bottom: 4px;">Total yang harus dibayar:</div>
           <div style="font-size: 26px; font-weight: 700; color: var(--color-teal);">${formatRp(total)}</div>
+        </div>
+
+        <!-- Rincian biaya transparan (PRD FR-02.3 / US-04) -->
+        <div style="background: #ffffff; border: 1px solid var(--color-mist); padding: 16px 18px; border-radius: var(--radius-inputs); margin-bottom: 24px;">
+          <h4 style="font-size: 14px; margin-bottom: 12px;">Rincian Biaya (transparan sebelum bayar)</h4>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Sewa (${order.pricing.days} hari × ${formatRp(order.pricing.pricePerDay)})</span>
+              <span>${formatRp(order.pricing.sewa)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Biaya perlindungan</span>
+              <span>${formatRp(order.pricing.perlindungan)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Biaya layanan (10%)</span>
+              <span>${formatRp(order.pricing.commission)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-graphite);">Deposit jaminan (dikembalikan)</span>
+              <span>${formatRp(order.deposit)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--color-mist); padding-top: 8px; font-weight: 700;">
+              <span>Total bayar</span>
+              <span style="color: var(--color-teal);">${formatRp(total)}</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--color-smoke); margin-top: 10px;">
+            Dana ditahan Rentfy (escrow) sampai barang dikembalikan dan dicek. Deposit kembali setelah masa tunggu komplain 3×24 jam.
+          </div>
         </div>
 
         <h4 style="font-size: 15px; margin-bottom: 12px;">Metode Pembayaran</h4>
@@ -1955,32 +2020,38 @@
         <!-- Interactive Map Pin -->
         <div id="pickup-map-el" class="leaflet-map-element"></div>
 
-        <h4 style="font-size: 15px; margin-top: 24px; margin-bottom: 6px;">Dokumentasi Kondisi Awal (Opsional)</h4>
-        <p style="font-size: 12px; color: var(--color-smoke);">Ambil foto kondisi fisik unit sebelum dibawa sebagai bukti serah terima.</p>
+        <h4 style="font-size: 15px; margin-top: 24px; margin-bottom: 6px;">Dokumentasi Kondisi Awal (Wajib)</h4>
+        <p style="font-size: 12px; color: var(--color-smoke);">Ambil foto kondisi fisik unit bersama pemilik sebelum dibawa sebagai bukti serah terima. <strong>Minimal 2 foto</strong> (tampak depan dan belakang) harus diunggah.</p>
         
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">
-          <div class="photo-slot-clean" onclick="showToast('Foto tampak depan tersimpan')">
+          <div class="photo-slot-clean" data-photo="front" id="photo-front">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Tampak Depan</span>
+            <small style="color: var(--color-smoke);">Belum diambil</small>
           </div>
-          <div class="photo-slot-clean" onclick="showToast('Foto tampak belakang tersimpan')">
+          <div class="photo-slot-clean" data-photo="back" id="photo-back">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Tampak Belakang</span>
+            <small style="color: var(--color-smoke);">Belum diambil</small>
           </div>
-          <div class="photo-slot-clean" onclick="showToast('Foto kelengkapan tersimpan')">
+          <div class="photo-slot-clean" data-photo="accessories" id="photo-accessories">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Kelengkapan</span>
+            <small style="color: var(--color-smoke);">Opsional</small>
           </div>
-          <div class="photo-slot-clean" onclick="showToast('Foto nomor seri tersimpan')">
+          <div class="photo-slot-clean" data-photo="serial" id="photo-serial">
             <span class="icon-svg">${Icons.camera}</span>
             <span>Nomor Seri</span>
+            <small style="color: var(--color-smoke);">Opsional</small>
           </div>
         </div>
+        <div style="font-size: 11px; color: var(--color-amber); text-align: center; margin-top: 4px;">Foto dicap waktu otomatis. Unggah sebagai bukti bersama.</div>
 
         <!-- 1 Amber CTA -->
-        <button class="btn btn-amber btn-block" id="btn-received-ok" style="padding: 14px; margin-top: 20px;">
+        <button class="btn btn-amber btn-block" id="btn-received-ok" style="padding: 14px; margin-top: 20px;" disabled>
           Barang Sudah Saya Terima
         </button>
+        <div style="font-size: 12px; color: var(--color-smoke); text-align: center; margin-top: 6px;" id="photo-requirements">Ambil minimal 2 foto wajib di atas untuk melanjutkan.</div>
 
         <div style="text-align: center; margin-top: 14px;">
           <a href="#/chat" class="btn btn-ghost" style="font-size: 13px;">
@@ -2000,9 +2071,41 @@
       }
     }, 150);
 
+    var photosTaken = { front: false, back: false, accessories: false, serial: false };
+    function updatePhotoUI(slotId, taken) {
+      var slot = document.getElementById('photo-' + slotId);
+      if (!slot) return;
+      if (taken) {
+        slot.classList.add('photo-slot-filled');
+        slot.innerHTML = `<span class="icon-svg">${Icons.check}</span><span>${slotId === 'front' ? 'Tampak Depan' : slotId === 'back' ? 'Tampak Belakang' : slotId === 'accessories' ? 'Kelengkapan' : 'Nomor Seri'}</span><small style="color: var(--color-teal);">Sudah</small>`;
+      } else {
+        slot.classList.remove('photo-slot-filled');
+        slot.innerHTML = `<span class="icon-svg">${Icons.camera}</span><span>${slotId === 'front' ? 'Tampak Depan' : slotId === 'back' ? 'Tampak Belakang' : slotId === 'accessories' ? 'Kelengkapan' : 'Nomor Seri'}</span><small style="color: var(--color-smoke);">${slotId === 'front' || slotId === 'back' ? 'Wajib' : 'Opsional'}</small>`;
+      }
+      var requiredDone = photosTaken.front && photosTaken.back;
+      var btn = document.getElementById('btn-received-ok');
+      var hint = document.getElementById('photo-requirements');
+      if (btn) btn.disabled = !requiredDone;
+      if (hint) hint.textContent = requiredDone ? '✅ Foto wajib lengkap. Lanjutkan serah terima.' : 'Ambil minimal 2 foto wajib di atas untuk melanjutkan.';
+    }
+
+    document.querySelectorAll('.photo-slot-clean').forEach(function(slot) {
+      var photoId = slot.getAttribute('data-photo');
+      if (!photoId) return;
+      slot.addEventListener('click', function() {
+        photosTaken[photoId] = true;
+        window.showToast('Foto ' + photoId + ' tersimpan (stempel waktu: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ')');
+        updatePhotoUI(photoId, true);
+      });
+    });
+
     document.getElementById('btn-received-ok').addEventListener('click', function () {
+      if (!photosTaken.front || !photosTaken.back) {
+        window.showToast('Harap ambil foto wajib terlebih dahulu');
+        return;
+      }
       window.AppState.orderStatus = 'sedang_disewa';
-      window.showToast('Status diperbarui: Masa sewa dimulai');
+      window.showToast('Dokumentasi kondisi tersimpan. Status diperbarui: Masa sewa dimulai');
       window.location.hash = '#/renting';
     });
   }
@@ -2375,6 +2478,352 @@
     document.getElementById('filter-apply').addEventListener('click', function () {
       modal.remove();
       if (onApply) onApply();
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // OWNER MODE DASHBOARD (PRD baru: kelola listing & booking, frontend demo)
+  // --------------------------------------------------------------------------
+  var ownerTab = 'ringkasan';
+  var ownerBookingAction = null;
+
+  function renderOwner(container, hash) {
+    var data = window.RentfyData;
+    var owner = data.owner;
+    var listings = data.ownerListings || [];
+    var bookings = data.ownerBookings || [];
+
+    var pendingCount = bookings.filter(function (b) { return b.status === 'pending'; }).length;
+    var activeListings = listings.filter(function (l) { return l.status === 'aktif'; }).length;
+    var activeBookings = bookings.filter(function (b) { return b.status === 'approved'; }).length;
+    var estEarning = bookings
+      .filter(function (b) { return b.status === 'approved' || b.status === 'completed'; })
+      .reduce(function (s, b) { return s + (b.totalAmount - b.commission); }, 0);
+
+    function bookingBadge(status) {
+      var map = {
+        pending: ['badge-amber', 'Menunggu Konfirmasi'],
+        approved: ['badge-teal', 'Disetujui'],
+        completed: ['badge-green', 'Selesai'],
+        cancelled: ['badge-neutral', 'Dibatalkan']
+      };
+      var m = map[status] || map.pending;
+      return `<span class="badge-status ${m[0]}">${m[1]}</span>`;
+    }
+
+    var tabBtns = [
+      ['ringkasan', 'Ringkasan'],
+      ['booking', 'Booking (' + pendingCount + ')'],
+      ['listing', 'Listing'],
+      ['ulasan', 'Ulasan']
+    ].map(function (t) {
+      return `<button class="owner-tab-btn ${ownerTab === t[0] ? 'active' : ''}" data-owner-tab="${t[0]}">${t[1]}</button>`;
+    }).join('');
+
+    var body = '';
+
+    if (ownerTab === 'ringkasan') {
+      body = `
+        <div class="owner-stats-row">
+          <div class="owner-stat-card"><div class="owner-stat-num">${activeListings}</div><div class="owner-stat-label">Listing Aktif</div></div>
+          <div class="owner-stat-card"><div class="owner-stat-num">${activeBookings}</div><div class="owner-stat-label">Booking Berjalan</div></div>
+          <div class="owner-stat-card"><div class="owner-stat-num">${pendingCount}</div><div class="owner-stat-label">Butuh Konfirmasi</div></div>
+          <div class="owner-stat-card"><div class="owner-stat-num">${formatRp(estEarning)}</div><div class="owner-stat-label">Estimasi Pendapatan</div></div>
+        </div>
+        <div style="background: var(--color-teal-light); padding: 14px 16px; border-radius: var(--radius-buttons); font-size: 13px; color: var(--color-forest-stage); margin: 20px 0; display: flex; align-items: center; gap: 10px;">
+          <span class="icon-svg" style="color: var(--color-teal);">${Icons.shield}</span>
+          Komisi platform 10% otomatis dipotong dari pendapatan. Dana dicairkan setelah barang kembali dan masa tunggu komplain selesai.
+        </div>
+        <h3 style="font-size: 18px; margin-bottom: 12px;">Permintaan Booking Terbaru</h3>
+        ${bookings.filter(function (b) { return b.status === 'pending'; }).length === 0
+          ? `<div style="color: var(--color-graphite); font-size: 14px; background:#f8fafc; border:1px solid var(--color-mist); padding:24px; border-radius: var(--radius-cards); text-align:center;">Tidak ada permintaan booking yang menunggu.</div>`
+          : bookings.filter(function (b) { return b.status === 'pending'; }).slice(0, 3).map(function (b) {
+            var item = listings.find(function (l) { return l.id === b.itemId; }) || {};
+            return `<div style="display:flex; align-items:center; gap:14px; border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:14px; margin-bottom:12px; background:#fff;">
+              <div style="width:56px; height:56px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#eee;">
+                <img src="${(item.images && item.images[0]) || ''}" style="width:100%; height:100%; object-fit:cover;" alt="">
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title || 'Barang'}</div>
+                <div style="font-size:12px; color:var(--color-graphite);">${b.customerName} • ${b.startDate} – ${b.endDate}</div>
+                <div style="font-size:13px; margin-top:2px;">${formatRp(b.totalAmount)} ${bookingBadge(b.status)}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <button class="btn btn-amber" style="font-size:12px; padding:6px 12px;" data-owner-approve="${b.id}">Terima</button>
+                <button class="btn btn-ghost" style="font-size:12px; padding:6px 12px;" data-owner-reject="${b.id}">Tolak</button>
+              </div>
+            </div>`;
+          }).join('')}
+        <a href="#/owner" onclick="(function(){var o=document.querySelectorAll('[data-owner-tab]'); if(o.length){o[1].click();}})(); return false;" style="color:var(--color-teal); font-size:13px; font-weight:600; display:inline-block; margin-top:8px;">Lihat semua booking →</a>
+      `;
+    } else if (ownerTab === 'booking') {
+      body = bookings.length === 0
+        ? `<div style="color: var(--color-graphite); text-align:center; padding:40px;">Belum ada booking.</div>`
+        : bookings.map(function (b) {
+            var item = listings.find(function (l) { return l.id === b.itemId; }) || {};
+            return `<div style="border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:16px; margin-bottom:12px; background:#fff;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                <div>
+                  <div style="font-weight:600; font-size:15px;">${item.title || 'Barang'}</div>
+                  <div style="font-size:13px; color:var(--color-graphite); margin-top:2px;">${b.id} • ${b.customerName}</div>
+                  <div style="font-size:13px; color:var(--color-graphite);">${b.startDate} – ${b.endDate}</div>
+                </div>
+                ${bookingBadge(b.status)}
+              </div>
+              <div style="display:flex; gap:8px; font-size:13px; margin-top:10px; flex-wrap:wrap;">
+                <span style="background:#f8fafc; padding:4px 10px; border-radius:8px; border:1px solid var(--color-mist);">Total ${formatRp(b.totalAmount)}</span>
+                <span style="background:#f8fafc; padding:4px 10px; border-radius:8px; border:1px solid var(--color-mist);">Komisi ${formatRp(b.commission)}</span>
+                <span style="background:#f8fafc; padding:4px 10px; border-radius:8px; border:1px solid var(--color-mist);">Deposit ${formatRp(b.deposit)}</span>
+              </div>
+              ${b.status === 'pending' ? `
+              <div style="display:flex; gap:10px; margin-top:14px;">
+                <button class="btn btn-amber" style="flex:1; font-size:13px;" data-owner-approve="${b.id}">Terima Booking</button>
+                <button class="btn btn-outline" style="flex:1; font-size:13px;" data-owner-reject="${b.id}">Tolak</button>
+              </div>` : ''}
+            </div>`;
+          }).join('');
+    } else if (ownerTab === 'listing') {
+      body = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:18px;">Listing Barang Saya</h3>
+          <button class="btn btn-amber" style="font-size:13px;" data-owner-newlisting><span class="icon-svg">${Icons.upload}</span> Pasang Barang</button>
+        </div>
+        ${listings.length === 0 ? `<div style="color:var(--color-graphite); text-align:center; padding:40px;">Belum ada listing.</div>` : listings.map(function (l) {
+          return `<div style="display:flex; gap:14px; border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:14px; margin-bottom:12px; background:#fff;">
+            <div style="width:72px; height:72px; border-radius:10px; overflow:hidden; flex-shrink:0; background:#eee;">
+              <img src="${l.images[0] || ''}" style="width:100%; height:100%; object-fit:cover;" alt="">
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:600; font-size:14px;">${l.title}</div>
+              <div style="font-size:12px; color:var(--color-graphite);">${formatRp(l.pricePerDay)}/hari • Deposit ${formatRp(l.deposit)}</div>
+              <div style="margin-top:4px;"><span class="badge-status ${l.status === 'aktif' ? 'badge-green' : 'badge-neutral'}">${l.status === 'aktif' ? 'Aktif' : l.status}</span></div>
+              <div style="font-size:12px; color:var(--color-graphite); margin-top:4px;">${l.bookedDates.length} tanggal sudah dibooking</div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:12px; align-self:center;" data-owner-doc="${l.id}">Foto Kondisi</button>
+          </div>`;
+        }).join('')}
+      `;
+    } else { // ulasan
+      var reviews = [
+        { name: 'Rina', rating: 5, text: 'Barang persis seperti foto, proses serah terima cepat dan pemilik ramah.', date: '3 hari lalu' },
+        { name: 'Andi', rating: 4, text: 'Baik, komunikatif. Sedikit telat saat pengambilan tapi maklum.', date: '1 minggu lalu' },
+        { name: 'Sari', rating: 5, text: 'Terpercaya. Deposit cair tepat waktu tanpa ribet.', date: '2 minggu lalu' }
+      ];
+      body = `
+        <h3 style="font-size:18px; margin-bottom:12px;">Ulasan yang Diterima</h3>
+        <div style="background:#fff; border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:16px; margin-bottom:16px; display:flex; gap:12px; align-items:center;">
+          <div style="font-size:28px; font-weight:700; color:var(--color-teal);">${owner.rating}</div>
+          <div>
+            <div style="display:flex; gap:2px;">${Array.from({length:5}, function(_,i){ return `<span class="icon-svg" style="${i < Math.round(owner.rating) ? '' : 'opacity:0.25;'}">${Icons.starFilled}</span>`; }).join('')}</div>
+            <div style="font-size:12px; color:var(--color-graphite);">${owner.reviews} ulasan dari penyewa</div>
+          </div>
+        </div>
+        ${reviews.map(function (r) {
+          return `<div style="border:1px solid var(--color-mist); border-radius: var(--radius-cards); padding:16px; margin-bottom:12px; background:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-weight:600; font-size:14px;">${r.name}</div>
+              <div style="display:flex; gap:2px;">${Array.from({length:5}, function(_,i){ return `<span class="icon-svg" style="${i < r.rating ? '' : 'opacity:0.25;'}">${Icons.starFilled}</span>`; }).join('')}</div>
+            </div>
+            <div style="font-size:13px; color:var(--color-slate);">"${r.text}"</div>
+            <div style="font-size:11px; color:var(--color-smoke); margin-top:6px;">${r.date}</div>
+          </div>`;
+        }).join('')}
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="container" style="max-width: 900px; padding-top: 28px; padding-bottom: 60px;">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+          <div style="width:56px; height:56px; border-radius:50%; background:var(--color-teal); color:#fff; font-size:24px; font-weight:700; display:flex; align-items:center; justify-content:center;">${owner.avatar}</div>
+          <div style="flex:1;">
+            <h1 style="font-size:24px; margin-bottom:2px;">Halo, ${owner.name} <span class="badge-status badge-teal" style="margin-left:4px;"><span class="icon-svg">${Icons.badgeCheck}</span> Terverifikasi</span></h1>
+            <div style="font-size:13px; color:var(--color-graphite);">Dashboard Pemilik • ${owner.location}</div>
+          </div>
+          <a href="#/profile" class="btn btn-outline" style="font-size:12px;">Profil</a>
+        </div>
+
+        <div class="owner-tab-bar">${tabBtns}</div>
+        <div style="margin-top:20px;">${body}</div>
+      </div>
+    `;
+
+    // Tabs
+    container.querySelectorAll('[data-owner-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        ownerTab = btn.getAttribute('data-owner-tab');
+        renderOwner(container, hash);
+      });
+    });
+
+    // Booking actions
+    container.querySelectorAll('[data-owner-approve]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var bid = btn.getAttribute('data-owner-approve');
+        var b = data.ownerBookings.find(function (x) { return x.id === bid; });
+        if (b) b.status = 'approved';
+        window.showToast('Booking ' + bid + ' diterima. Penyewa dapat melakukan pembayaran.');
+        renderOwner(container, hash);
+      });
+    });
+    container.querySelectorAll('[data-owner-reject]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var bid = btn.getAttribute('data-owner-reject');
+        var b = data.ownerBookings.find(function (x) { return x.id === bid; });
+        if (b) b.status = 'cancelled';
+        window.showToast('Booking ' + bid + ' ditolak.');
+        renderOwner(container, hash);
+      });
+    });
+
+    // New listing
+    var newListingBtn = container.querySelector('[data-owner-newlisting]');
+    if (newListingBtn) newListingBtn.addEventListener('click', function () {
+      window.showToast('Form pasang barang belum tersedia di demo, tapi alur pemilik sudah tampil.');
+    });
+
+    // Photo doc modal
+    container.querySelectorAll('[data-owner-doc]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var lid = btn.getAttribute('data-owner-doc');
+        openOwnerDocModal(lid);
+      });
+    });
+  }
+
+  function openOwnerDocModal(listingId) {
+    var modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.innerHTML = `
+      <div class="modal-card" style="max-width: 480px;">
+        <div class="modal-header-row">
+          <h3 style="font-size: 18px;">Foto Kondisi Sebelum Sewa</h3>
+          <button class="btn-ghost" id="owner-doc-close" style="font-size:18px; font-weight:bold;">✕</button>
+        </div>
+        <div class="modal-content-area">
+          <p style="font-size:13px; color:var(--color-graphite); margin-bottom:16px;">Unggah foto/video kondisi barang berstempel waktu sebagai bukti sebelum disewa (PRD US-07).</p>
+          <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:10px;">
+            <div class="photo-slot-clean" data-owner-photo="depan"><span class="icon-svg">${Icons.camera}</span><span>Depan</span></div>
+            <div class="photo-slot-clean" data-owner-photo="belakang"><span class="icon-svg">${Icons.camera}</span><span>Belakang</span></div>
+            <div class="photo-slot-clean" data-owner-photo="aksesori"><span class="icon-svg">${Icons.camera}</span><span>Aksesori</span></div>
+            <div class="photo-slot-clean" data-owner-photo="seri"><span class="icon-svg">${Icons.camera}</span><span>No. Seri</span></div>
+          </div>
+        </div>
+        <div class="modal-footer-row">
+          <button class="btn btn-ghost" id="owner-doc-skip">Nanti Saja</button>
+          <button class="btn btn-amber" id="owner-doc-save">Simpan Bukti</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    var photos = {};
+    modal.querySelectorAll('[data-owner-photo]').forEach(function (slot) {
+      slot.addEventListener('click', function () {
+        if (!slot.classList.contains('photo-slot-filled')) {
+          var pid = slot.getAttribute('data-owner-photo');
+          photos[pid] = true;
+          slot.classList.add('photo-slot-filled');
+          slot.innerHTML = `<span class="icon-svg">${Icons.check}</span><span>${slot.textContent.trim()}</span>`;
+          window.showToast('Foto tersimpan (stempel waktu: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ')');
+        }
+      });
+    });
+    document.getElementById('owner-doc-close').addEventListener('click', function () { modal.remove(); });
+    document.getElementById('owner-doc-skip').addEventListener('click', function () { modal.remove(); });
+    document.getElementById('owner-doc-save').addEventListener('click', function () {
+      window.showToast('Dokumentasi kondisi barang tersimpan sebagai bukti bersama.');
+      modal.remove();
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // COMPLAIN CONTROLLER (US-08, FR-05.1)
+  // --------------------------------------------------------------------------
+  function renderComplain(container) {
+    var order = window.AppState.currentOrder;
+
+    container.innerHTML = `
+      <div class="step-card-centered">
+        <div class="step-title-header">
+          <span class="badge-status badge-amber" style="margin-bottom: 8px;">Penanganan Masalah</span>
+          <h2 style="font-size: 22px;">Ajukan Komplain</h2>
+          <p style="font-size: 13px; color: var(--color-graphite); margin-top: 2px;">
+            Komplain bisa diajukan maksimal 3 hari setelah pengembalian barang. Sertakan bukti agar peninjauan adil.
+          </p>
+        </div>
+
+        ${order ? `
+        <div style="background: #f8fafc; border: 1px solid var(--color-mist); padding: 14px 18px; border-radius: var(--radius-inputs); margin-bottom: 20px; font-size: 13px;">
+          <div style="font-weight: 600; margin-bottom: 2px;">${order.item.name}</div>
+          <div style="color: var(--color-graphite);">${order.dates.start} – ${order.dates.end} • ${order.orderId}</div>
+        </div>
+        ` : ''}
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Jenis Masalah</label>
+          <select class="input-field" id="complain-type">
+            <option>Barang rusak saat sewa</option>
+            <option>Barang tidak sesuai deskripsi</option>
+            <option>Keterlambatan serah terima</option>
+            <option>Kelengkapan tidak sesuai</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Kronologi Masalah</label>
+          <textarea class="input-field" rows="4" id="complain-desc" placeholder="Ceritakan kronologi kejadian sedetail mungkin..."></textarea>
+        </div>
+
+        <h4 style="font-size: 14px; margin-bottom: 8px;">Lampiran Bukti (foto/video berstempel waktu)</h4>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;" id="complain-photos">
+          <div class="photo-slot-clean" data-photo="bukti1">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 1</span>
+          </div>
+          <div class="photo-slot-clean" data-photo="bukti2">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 2</span>
+          </div>
+          <div class="photo-slot-clean" data-photo="bukti3">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 3</span>
+          </div>
+          <div class="photo-slot-clean" data-photo="bukti4">
+            <span class="icon-svg">${Icons.camera}</span><span>Bukti 4</span>
+          </div>
+        </div>
+
+        <div style="background: var(--color-teal-light); padding: 12px 16px; border-radius: var(--radius-buttons); font-size: 12px; color: var(--color-forest-stage); margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+          <span class="icon-svg" style="color: var(--color-teal);">${Icons.shield}</span>
+          Keputusan admin didasarkan bukti dokumentasi kondisi sebelum dan sesudah sewa.
+        </div>
+
+        <!-- 1 Amber CTA -->
+        <button class="btn btn-amber btn-block" id="btn-complain-send" style="padding: 14px;">Kirim Komplain</button>
+      </div>
+    `;
+
+    var complainPhotos = 0;
+    container.querySelectorAll('.photo-slot-clean').forEach(function (slot) {
+      slot.addEventListener('click', function () {
+        if (!slot.classList.contains('photo-slot-filled')) {
+          complainPhotos++;
+          slot.classList.add('photo-slot-filled');
+          slot.innerHTML = `<span class="icon-svg">${Icons.check}</span><span>Bukti ${complainPhotos}</span>`;
+          window.showToast('Bukti tersimpan (stempel waktu otomatis)');
+        }
+      });
+    });
+
+    document.getElementById('btn-complain-send').addEventListener('click', function () {
+      var desc = document.getElementById('complain-desc').value.trim();
+      if (!desc) {
+        window.showToast('Tulis kronologi masalah terlebih dahulu');
+        return;
+      }
+      this.textContent = 'Mengirim Komplain...';
+      this.disabled = true;
+      setTimeout(function () {
+        window.showToast('Komplain masuk antrean tinjauan. Admin akan memutuskan maksimal 7 hari.');
+        window.location.hash = '#/orders';
+      }, 1000);
     });
   }
 
