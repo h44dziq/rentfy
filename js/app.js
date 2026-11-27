@@ -254,22 +254,20 @@
 
           <form id="login-form">
             <div style="margin-bottom: 18px;">
-              <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Alamat Email</label>
-              <input type="email" id="login-email" class="input-field" placeholder="nama@email.com" value="arvin@email.com">
+              <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Username</label>
+              <input type="text" id="login-username" class="input-field" placeholder="Masukkan username" value="arvin" autocomplete="username">
+              <div style="font-size: 11px; color: var(--color-smoke); margin-top: 4px;">Demo: username <strong>pemilik</strong> = mode pemilik, selain itu = penyewa.</div>
             </div>
             <div style="margin-bottom: 24px;">
               <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Kata Sandi</label>
               <input type="password" id="login-pwd" class="input-field" placeholder="••••••••" value="password123">
             </div>
 
-            <div style="margin-bottom: 28px;">
-              <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--color-slate);">Mode Login (Demo)</label>
-              <select id="login-role" class="input-field">
-                <option value="penyewa">Penyewa (Cari dan Sewa Barang)</option>
-                <option value="pemilik">Pemilik (Kelola Listing & Booking)</option>
-              </select>
-              <div style="font-size: 11px; color: var(--color-smoke); margin-top: 4px;">Pilih role untuk demo alur sesuai PRD baru</div>
-            </div>
+            <!-- Hidden role select: tetap menyimpan opsi pemilik & penyewa, tidak ditampilkan -->
+            <select id="login-role" style="display: none;">
+              <option value="penyewa">Penyewa</option>
+              <option value="pemilik">Pemilik</option>
+            </select>
 
             <!-- Single Amber CTA per Screen -->
             <button type="submit" class="btn btn-amber btn-block">
@@ -286,7 +284,12 @@
 
     document.getElementById('login-form').addEventListener('submit', function (e) {
       e.preventDefault();
-      var role = document.getElementById('login-role') ? document.getElementById('login-role').value : 'penyewa';
+      var username = document.getElementById('login-username') ? document.getElementById('login-username').value.trim() : '';
+      // Deteksi role dari username: "pemilik"/"owner" => pemilik, selain itu penyewa
+      var role = (/pemilik|owner/i).test(username) ? 'pemilik' : 'penyewa';
+      // Sinkronkan ke hidden select agar nilai role tetap tersimpan
+      var roleSel = document.getElementById('login-role');
+      if (roleSel) roleSel.value = role;
       window.AppState.isLoggedIn = true;
       window.RentfyData.user.role = role;
       if (role === 'pemilik') {
@@ -294,7 +297,7 @@
         window.showToast('Selamat datang, mode pemilik aktif');
       } else {
         window.location.hash = '#/';
-        window.showToast('Selamat datang kembali, Arvin Maulana');
+        window.showToast('Selamat datang kembali, ' + (window.RentfyData.user.name || 'Rina'));
       }
     });
   }
